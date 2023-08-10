@@ -1,0 +1,24 @@
+#: table_doi: 10.17182/hepdata.70825.v1/t1
+#: name: Table 1
+#: description: Second-order harmonic coefficient $v_2^{ch~jet}$ as function a of $p_{T}^{ch~jet}$ for 0--5% collision centrality.
+
+#: data_file: Table1.yaml
+#: keyword reactions: PB PB --> JET X
+#: keyword observables: V2
+#: keyword phrases: Inclusive | Angular Correlation | Jet Production
+#: keyword cmenergies: 2760.0
+#: ABS(ETA),,,0.0-0.7
+#: CENTRALITY [pct],,,0.0-5.0
+#: LEADPT,,,3.0
+#: R,,,0.2
+#: RE,,,PB PB --> JET(S) X
+#: SQRT(S)/NUCLEON [GeV],,,2760.0
+$pt_{T}^{ch~jet}$,$pt_{T}^{ch~jet}$ LOW,$pt_{T}^{ch~jet}$ HIGH,$v_2^{ch~jet}$,stat +,stat -,"sys,shape +","sys,shape -","sys,corr +","sys,corr -"
+35.0,30.0,40.0,0.0388,0.00819,-0.00819,0.0322,-0.0322,0.01,-0.01
+45.0,40.0,50.0,0.0413,0.011,-0.011,0.0247,-0.0247,0.01,-0.01
+55.0,50.0,60.0,0.0528,0.0148,-0.0148,0.0181,-0.0181,0.01,-0.01
+65.0,60.0,70.0,0.0648,0.0203,-0.0203,0.0141,-0.0141,0.01,-0.01
+75.0,70.0,80.0,0.0738,0.027,-0.027,0.0193,-0.0193,0.01,-0.01
+85.0,80.0,90.0,0.0799,0.0345,-0.0345,0.0287,-0.0287,0.01,-0.01
+95.0,90.0,100.0,0.0843,0.0421,-0.0421,0.03,-0.03,0.01,-0.01
+
