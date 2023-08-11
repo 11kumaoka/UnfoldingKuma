@@ -32,7 +32,7 @@ Int_t lNoFillMerker[10] = {24, 25, 26, 32, 28, 30, 27, 24, 25, 26};
 // #[kBrack, kRed, kBlue, kGreen+3, kOrange+8, kAzure+10, kSpring+4, kViolet+1, kPink+9, kSpring-9, kOrange+8, kAzure+1, kTeal+4, kRed-7, kBlue-7, kGreen-2, kOrange-2, kViolet+7, kSpring+4, kTeal-5]
 Int_t lFillColor[21] = {1, 632, 600, 416+3, 800+8, 860+10, 900+10, 820+4, 880+1, 900+9, 820-9, 800+1, 860+1, 840+4, 632-7, 600-7, 416-2, 800-2, 880+7, 820+4, 840-5};
 
-Bool_t plotQAHists = true; // false
+Bool_t plotQAHists = false; // true, false
 
 // Int_t numOfCentBin = 10;
 // Double_t centRangeList[10][2] = {{0,5},{5,10},{10,30},{30,50},{50,90}};
@@ -49,8 +49,8 @@ TString lEPLabel[3] = {"OutOfPlane", "InPlane", "Inclusive"};
 Int_t leadingTrackPtCut = 5; // 0, 5, 7 GeV/c
 TString trackEff = ""; // 98%: "", 94%: "TrackEff094"
 
-Int_t PtHardBins = 21;
-// Int_t PtHardBins = 2;
+// Int_t PtHardBins = 21;
+Int_t PtHardBins = 5;
 
 Int_t variation = 1;
 Double_t minPtGen = 10.;
@@ -103,6 +103,8 @@ void ExtractDataRawJet(TList * lMainTree);
 void ScaleJetHists(TList * lMainTree, Double_t lScaleFactor[20], Int_t PtHardBins, TString inEmbFileBaseName, TString jetTaskName);
 void PlotPerformanceHistEachCent(TList *lMainTree);
 
+Double_t movePhaseShift(Double_t angle);
+
 TProfile* getJER1(TProfile* hJESshift, TString name);
 TProfile* getJER2(TH2D* histResponseMatrix, TString name);
 
@@ -129,13 +131,13 @@ TString inRawJetFile = "~/ALICE/cernbox/SWAN_projects/outputFiles/LHC18r/pass3/C
 TString inEmbFileDir = "~/ALICE/cernbox/SWAN_projects/outputFiles/LHC18r/pass3/Ch/Embedding/Train/8870/";
 
 TString inEmbFileBaseName = inEmbFileDir + "AnalysisResultsPtHard";
-// TString outEmbFileDir = "./";
-TString outEmbFileDir = "~/ALICE/cernbox/SWAN_projects/outputFiles/LHC18r/pass3/Ch/Embedding/";
+TString outEmbFileDir = "./";
+// TString outEmbFileDir = "~/ALICE/cernbox/SWAN_projects/outputFiles/LHC18r/pass3/Ch/Embedding/";
 
 // ###################################################################################
 // # Main function
 int main(){
-    TString outEmbFile = TString::Format("%sEmbedPtHardScaledResults_TrackPtCut%d_%s.root"\
+    TString outEmbFile = TString::Format("%sEmbedPtHardScaledResults_TrackPtCut%d_%s_1.root"\
         , outEmbFileDir.Data(), leadingTrackPtCut, trackEff.Data());
 
     TString embHelperTaskName = "AliAnalysisTaskEmcalEmbeddingHelper_histos";
@@ -171,20 +173,18 @@ int main(){
 
     TFile *outRootFile = new TFile(outEmbFile, "RECREATE");
     TList *lMainTree = new TList();
-    // OFileStracture(lMainTree, numOfCentBin);
     OFileStracture(lMainTree, 5);
     
     eachPtHardBinScaleFact(inEmbFileBaseName, embHelperTaskName, PtHardBins, \
         hNEventsAcc, hNEventsTot, nEventsAccAvg, nNEventsTotAvg,\
             lScaleFactor, lPtHardEventNum, lMainTree);
     
-    // ExtractDataRawJet(lMainTree);
+    ExtractDataRawJet(lMainTree);
 
-    // std::cout << "lScaleFactor = [" << "\n";
-    // for (int i = 0; i < 3; i++) std::cout << lrefPtHardScalFactor[i] << ", " << "\n"; 
+    std::cout << "lScaleFactor = [" << "\n";
+    for (int i = 0; i < 20; i++) std::cout << lrefPtHardScalFactor[i] << ", " << "\n"; 
     // ScaleJetHists(lMainTree, lScaleFactor, PtHardBins, inEmbFileBaseName, jetTaskName);
-    
-    // ScaleJetHists(lMainTree, lrefPtHardScalFactor, PtHardBins, inEmbFileBaseName, jetTaskName);
+    ScaleJetHists(lMainTree, lrefPtHardScalFactor, PtHardBins, inEmbFileBaseName, jetTaskName);
 
     for(Int_t epBin=0; epBin<2;epBin++){
         TList* tempLMainEP = (TList *) lMainTree->FindObject(lEPLabel[epBin].Data());
@@ -196,37 +196,38 @@ int main(){
         //     TString label = TString::Format("Cent%d",centBin);
         //     TString histName = TString::Format("hRM_forUnfold_Cent%d",centBin);
         //     TH2D* hOriginRM = (TH2D* ) tempLMainEPCent->FindObject(histName.Data());
-        //     // EditRMForUF(tempLMainEPCent, hOriginRM, label);
+        //     EditRMForUF(tempLMainEPCent, hOriginRM, label);
         // }
     }
+    std::cout << "CheeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeecKuma 000" << std::endl;
     
-    
-    // TList* tempLMainIEP = (TList *) lMainTree->FindObject(lEPLabel[0].Data());
-    // TList* tempLMainOEP = (TList *) lMainTree->FindObject(lEPLabel[1].Data());
-    // TList* tempLMainInc = (TList *) lMainTree->FindObject(lEPLabel[2].Data());
-    // for(Int_t centBin=iniCentBin;centBin < numOfCentBin;centBin++){
+    TList* tempLMainIEP = (TList *) lMainTree->FindObject(lEPLabel[0].Data());
+    TList* tempLMainOEP = (TList *) lMainTree->FindObject(lEPLabel[1].Data());
+    TList* tempLMainInc = (TList *) lMainTree->FindObject(lEPLabel[2].Data());
+    // for(Int_t centBin=iniCentBin; centBin < numOfCentBin;centBin++){
     //     TString listName = TString::Format("lCent%d",centBin);
-    //     TList* tempLMainIEPCent \
-    //         = (TList *) tempLMainIEP->FindObject(listName.Data());
-    //     TList* tempLMainOEPCent \
-    //         = (TList *) tempLMainOEP->FindObject(listName.Data());
-    //     TList* tempLMainIncCent \
-    //         = (TList *) tempLMainInc->FindObject(listName.Data());
+    //     TList* tempLMainIEPCent = (TList *) tempLMainIEP->FindObject(listName.Data());
+    //     TList* tempLMainOEPCent = (TList *) tempLMainOEP->FindObject(listName.Data());
+    //     TList* tempLMainIncCent = (TList *) tempLMainInc->FindObject(listName.Data());
+
     //     TIter next(tempLMainIEPCent);
     //     TObject* object = 0;
     //     while ((object = next())){
     //         TString histName = object->GetName();
-    //         std::cout << "Got an histName" << std::endl;
-    //         auto tempIEPHist = tempLMainIEPCent->FindObject(histName.Data());
-    //         tempLMainIncCent->Add(tempIEPHist);
+    //         std::cout << "Got an histName: " << histName.Data() << std::endl;
     //         auto tempIncHist = tempLMainIncCent->FindObject(histName.Data());
+    //         tempLMainIncCent->Add(tempIncHist);
+    // 
+    //         auto tempIEPHist = tempLMainIEPCent->FindObject(histName.Data());
+    //         tempLMainIEPCent->Add(tempIEPHist);
     //         auto tempOEPHist = tempLMainOEPCent->FindObject(histName.Data());
-    //         tempIncHist->Add(tempOEPHist);
+    //         tempLMainOEPCent->Add(tempOEPHist);
     //     }
     // }
-    // for(Int_t histBin = numOfCentBin;histBin< len(lMainTree[0]); histBin++){
+    
+    // for(Int_t histBin = numOfCentBin;histBin< lMainTree[0]->Size(); histBin++){
     //     tempHist = lMainTree[0][histBin]->Clone();
-    //     # lMainTree[2]->Add(lMainTree[0][histBin]);
+    //     // lMainTree[2]->Add(lMainTree[0][histBin]);
     //     lMainTree[2]->Add(tempHist);
     //     lMainTree[2][histBin]->Add(lMainTree[1][histBin];
     // }
@@ -480,100 +481,181 @@ void ScaleJetHists(TList * lMainTree, Double_t lScaleFactor[20], Int_t PtHardBin
         
         if(!lHEventInfo) std::cout << "ERROR no " << jetTaskName << " found"<<std::endl;
 
+        Double_t ptHardScaleFactor = lScaleFactor[ptHardBin-1];
+
+        // == s ==  Excute 4D RM =============
+        TString titleFourDRM = "hRMWithEP2Angle;#it{p}_{T}^{truth} (GeV/#it{c}); #it{p}_{T,corr}^{det} (GeV/#it{c}); #phi^{truth jet}-#Psi_{EP, 3}; #phi^{det jet}-#Psi_{EP, 3}; Centrality (%)";
+        Int_t nbinsFourDRM[4]  = {50, 50, 6, 6};
+        Double_t minValFourDRM[4] = {0., 0., 0., 0.};
+        Double_t maxValFourDRM[4] = {250, 250, TMath::Pi(), TMath::Pi()};
+        THnSparse* hRMWithEP2 = new THnSparseD("hRMWithEP2Angle", titleFourDRM, 4, nbinsFourDRM, minValFourDRM, maxValFourDRM);
+        
+        TList* tempLMainInc = (TList *) lMainTree->FindObject("Inclusive");
+        for(Int_t centBin=iniCentBin; centBin < numOfCentBin; centBin++){
+            std::cout<< "          ## s 11 START centrality : "<< centBin <<"  ##"<<std::endl;
+            listName = TString::Format("lCent%d",centBin);
+            TList* tempLMainIncCent = (TList *) tempLMainInc->FindObject(listName.Data());
+            
+            histName = "hRMWithEP2Angle";
+            THnSparse *hTempMD = (THnSparse *) lHEventInfo->FindObject(histName.Data());
+
+            Int_t nBins0 = hTempMD->GetAxis(0)->GetNbins();
+            Int_t nBins1 = hTempMD->GetAxis(1)->GetNbins();
+            Int_t nBins2 = hTempMD->GetAxis(2)->GetNbins();
+            Int_t nBins3 = hTempMD->GetAxis(3)->GetNbins();
+            Int_t nBins4 = hTempMD->GetAxis(4)->GetNbins();
+
+            Int_t binList[5] = {0,0,0,0,0};
+            Double_t binValList[4] = {0.,0.,0.,0.};
+            Int_t embCentBinNunRange[5][2] = {{1,2},{2,3},{3,7},{7,11},{11,18}};
+            for(Int_t mCentBin = embCentBinNunRange[centBin][0]; \
+            mCentBin < embCentBinNunRange[centBin][1]; mCentBin++){
+                for(Int_t genJetPtBin = 1; genJetPtBin < nBins0+1; genJetPtBin++){
+                    for(Int_t detJetPtBin = 1; detJetPtBin < nBins1+1; detJetPtBin++){
+            for(Int_t genJetAngleBin = 1; genJetAngleBin < nBins2+1; genJetAngleBin++){
+                for(Int_t detJetAngleBin = 1; detJetAngleBin < nBins3+1; detJetAngleBin++){
+                    binList[0] = genJetPtBin;
+                    binList[1] = detJetPtBin;
+                    binList[2] = genJetAngleBin;
+                    binList[3] = detJetAngleBin;
+                    binList[4] = centBin;
+                    
+                    Int_t binContent = hTempMD->GetBinContent(binList);
+                    Double_t genJetPt = hTempMD->GetAxis(0)->GetBinCenter(genJetPtBin);
+                    Double_t detJetPt = hTempMD->GetAxis(1)->GetBinCenter(detJetPtBin);
+                    Double_t genJetAngle = hTempMD->GetAxis(2)->GetBinCenter(genJetAngleBin);
+                    Double_t detJetAngle = hTempMD->GetAxis(3)->GetBinCenter(detJetAngleBin);
+                    
+                    genJetAngle = movePhaseShift(genJetAngle);
+                    detJetAngle = movePhaseShift(detJetAngle);
+                    
+                    binValList[0] = genJetPt;
+                    binValList[1] = detJetPt;
+                    binValList[2] = genJetAngle;
+                    binValList[3] = detJetAngle;
+                    // hRMWithEP2->Fill(binValList);
+
+                    Int_t totalBinNum = hTempMD->GetBin(binList);
+                    Int_t binList2[5] = {0,0,0,0,0};
+                    Double_t fillBinContent = hTempMD->GetBinContent(totalBinNum, binList2);
+                    Double_t fillBinErr = hTempMD->GetBinError2(totalBinNum);
+                    // Double_t fillBinContent = hTempMD->GetBinContent(binList);
+                    Int_t fillBinList[4] = {0,0,0,0};
+                    for(Int_t i = 0; i<4; i++) fillBinList[i] = binList2[i];
+                    Int_t fillTotalBinNum = hRMWithEP2->GetBin(binList);
+                    hRMWithEP2->SetBinContent(fillTotalBinNum, fillBinContent);
+                    hRMWithEP2->SetBinError2(fillTotalBinNum, fillBinErr);
+                }
+            }
+                    }
+                }
+            }
+            
+            hRMWithEP2->Sumw2();
+            hRMWithEP2->Scale(ptHardScaleFactor);
+            if(ptHardBin == 1) tempLMainIncCent->Add(hRMWithEP2);
+            else{
+                THnSparse* tempHist = (THnSparse*) tempLMainIncCent->FindObject(histName.Data());
+                tempHist->Add(hRMWithEP2);
+            }
+            
+        }
+        // == e ==  Excute 4D RM =============
+
         // # Look for the EventCutOutput from AliEventCuts, and if it doesn't exist, look for histo fHistEventCount
         TH1D* lHybRawJet = (TH1D *)lHEventInfo->FindObject("hybridRawJet");
         TH1D* lParRawJet = (TH1D *)lHEventInfo->FindObject("particleRawJet");
         
-        Double_t ptHardScaleFactor = lScaleFactor[ptHardBin-1];
         for(Int_t epBin=0;epBin<2;epBin++){
             std::cout << "      %%% s %%% START ep : " << lEPLabel[epBin] << "  %%% " << std::endl;
-            TList* tempLMainEP = (TList *) lMainTree->FindObject(lEPLabel[epBin].Data());
             TString epLabel = lEPLabel[epBin];
+            TList* tempLMainEP = (TList *) lMainTree->FindObject(epLabel.Data());
             TH1D *lHybRawJetEP = (TH1D *)lHybRawJet->FindObject(epLabel.Data());
             TH1D *lParRawJetEP = (TH1D *)lParRawJet->FindObject(epLabel.Data());
             
             Double_t reBin = 1.;
-            for(Int_t centBin=iniCentBin;centBin<numOfCentBin;centBin++){
-                std::cout<< "          ## s 11 START centrality : "<< centBin <<"  ##"<<std::endl;
-                listName = TString::Format("lCent%d",centBin);
-                TList* tempLMainEPCent = (TList *) tempLMainEP->FindObject(listName.Data());
-                
-                histName = TString::Format("hJetCorrPtLocal_%d",centBin);
-                TH1D* hTempHybRawJetEP = (TH1D *)lHybRawJetEP->FindObject(histName.Data());
-                TH1D* hHybRawJetEP = (TH1D *)hTempHybRawJetEP->Clone();
-                histName = TString::Format("hHybJetCorrPtLocal_%d",centBin);
-                hHybRawJetEP->SetName(histName.Data());
-                hHybRawJetEP->GetXaxis()->SetRangeUser(0, 250);
-                
-                reBin = 1.;
-                histLabelSetting(hHybRawJetEP, histName, \
-                    "#it{p}_{T, det}^{jet} [GeV/#it{c}]", "count", centBin, 1, reBin);
-                addHistIntoList(tempLMainEPCent, hHybRawJetEP, histName, \
-                    ptHardScaleFactor, ptHardBin);
-                
-                histName = TString::Format("hJetCorrPtLocal_%d",centBin);
-                TH1D *hTempParRawJetEP = (TH1D *)lParRawJetEP->FindObject(histName.Data());
-                TH1D *hParRawJetEP = (TH1D *) hTempParRawJetEP->Clone();
-                histName = TString::Format("hParJetCorrPtLocal_%d",centBin);
-                hParRawJetEP->SetName(histName.Data());
-                hParRawJetEP->GetXaxis()->SetRangeUser(0, 250);
-                reBin = 1.;
-                histLabelSetting(hParRawJetEP, histName, \
-                    "#it{p}_{T, gen}^{jet} [GeV/#it{c}]", "count", centBin, 1, reBin);
-                addHistIntoList(tempLMainEPCent, hParRawJetEP, histName, \
-                    ptHardScaleFactor, ptHardBin);
-            }
+            // for(Int_t centBin=iniCentBin;centBin<numOfCentBin;centBin++){
+            //     std::cout<< "          ## s 11 START centrality : "<< centBin <<"  ##"<<std::endl;
+            //     listName = TString::Format("lCent%d",centBin);
+            //     TList* tempLMainEPCent = (TList *) tempLMainEP->FindObject(listName.Data());
+            // 
+            //     histName = TString::Format("hJetCorrPtLocal_%d",centBin);
+            //     TH1D* hTempHybRawJetEP = (TH1D *)lHybRawJetEP->FindObject(histName.Data());
+            //     TH1D* hHybRawJetEP = (TH1D *)hTempHybRawJetEP->Clone();
+            //     histName = TString::Format("hHybJetCorrPtLocal_%d",centBin);
+            //     hHybRawJetEP->SetName(histName.Data());
+            //     hHybRawJetEP->GetXaxis()->SetRangeUser(0, 250);
+            // 
+            //     reBin = 1.;
+            //     histLabelSetting(hHybRawJetEP, histName, \
+            //         "#it{p}_{T, det}^{jet} [GeV/#it{c}]", "count", centBin, 1, reBin);
+            //     addHistIntoList(tempLMainEPCent, hHybRawJetEP, histName, \
+            //         ptHardScaleFactor, ptHardBin);
+            // 
+            //     histName = TString::Format("hJetCorrPtLocal_%d",centBin);
+            //     TH1D *hTempParRawJetEP = (TH1D *)lParRawJetEP->FindObject(histName.Data());
+            //     TH1D *hParRawJetEP = (TH1D *) hTempParRawJetEP->Clone();
+            //     histName = TString::Format("hParJetCorrPtLocal_%d",centBin);
+            //     hParRawJetEP->SetName(histName.Data());
+            //     hParRawJetEP->GetXaxis()->SetRangeUser(0, 250);
+            //     reBin = 1.;
+            //     histLabelSetting(hParRawJetEP, histName, \
+            //         "#it{p}_{T, gen}^{jet} [GeV/#it{c}]", "count", centBin, 1, reBin);
+            //     addHistIntoList(tempLMainEPCent, hParRawJetEP, histName, \
+            //         ptHardScaleFactor, ptHardBin);
+            // }
             
-            listName = "MatchedJetHisto_" + epLabel;
-            TList *lMatchingJet = (TList *)lHEventInfo->FindObject(listName.Data());
             
             TH1D* hTemp1D = new TH1D();
             TH2D* hTemp2D = new TH2D();
             TH3D* hTemp3D = new TH3D();
 
-            histName = "hResponseMatrixDiff";
-            THnSparse *hTempMD = (THnSparse *) lMatchingJet->FindObject(histName.Data());
-            hTempMD->Sumw2();
-            hTempMD->Scale(ptHardScaleFactor);
-            if(ptHardBin == 1) tempLMainEP->Add(hTempMD);
-            else{
-                THnSparse* tempHist = (THnSparse*) tempLMainEP->FindObject(histName.Data());
-                tempHist->Add(hTempMD);
-            }
+            // listName = "MatchedJetHisto_" + epLabel;
+            // TList *lMatchingJet = (TList *)lHEventInfo->FindObject(listName.Data());
+            // histName = "hResponseMatrixDiff";
+            // THnSparse *hTempMD = (THnSparse *) lMatchingJet->FindObject(histName.Data());
+            // hTempMD->Sumw2();
+            // hTempMD->Scale(ptHardScaleFactor);
+            // if(ptHardBin == 1) tempLMainEP->Add(hTempMD);
+            // else{
+            //     THnSparse* tempHist = (THnSparse*) tempLMainEP->FindObject(histName.Data());
+            //     tempHist->Add(hTempMD);
+            // }
             
-            if(plotQAHists){
-                histName = "hJESshift";
-                hTemp3D = (TH3D *) lMatchingJet->FindObject(histName.Data());
-                addHistIntoList(tempLMainEP, hTemp3D, histName, 1, ptHardBin);
-                histName = "hEmbDeltaPt";
-                hTemp3D = (TH3D *) lMatchingJet->FindObject(histName.Data());
-                addHistIntoList(tempLMainEP, hTemp3D, histName, 1, ptHardBin);
-                histName = "hJESshiftHybDet";
-                hTemp3D = (TH3D *) lMatchingJet->FindObject(histName.Data());
-                addHistIntoList(tempLMainEP, hTemp3D, histName, 1, ptHardBin);
-                histName = "hEmbDeltaPtHybDet";
-                hTemp3D = (TH3D *) lMatchingJet->FindObject(histName.Data());
-                addHistIntoList(tempLMainEP, hTemp3D, histName, 1, ptHardBin);
-                histName = "hJESshiftDetPar";
-                hTemp3D = (TH3D *) lMatchingJet->FindObject(histName.Data());
-                addHistIntoList(tempLMainEP, hTemp3D, histName, 1, ptHardBin);
-                histName = "hEmbDeltaPtDetPar";
-                hTemp3D = (TH3D *) lMatchingJet->FindObject(histName.Data());
-                addHistIntoList(tempLMainEP, hTemp3D, histName, 1, ptHardBin);
-
-                histName = "hNEFVsPt";
-                hTemp3D = (TH3D *) lMatchingJet->FindObject(histName.Data());
-                addHistIntoList(tempLMainEP, hTemp3D, histName, ptHardScaleFactor, ptHardBin);
-                histName = "hZLeadingVsPt";
-                hTemp3D = (TH3D *) lMatchingJet->FindObject(histName.Data());
-                addHistIntoList(tempLMainEP, hTemp3D, histName, ptHardScaleFactor, ptHardBin);
-                histName = "hMatchingDistance";
-                hTemp3D = (TH3D *) lMatchingJet->FindObject(histName.Data());
-                addHistIntoList(tempLMainEP, hTemp3D, histName, ptHardScaleFactor, ptHardBin);
-                // histName = "fHistJetMatchingQA"
-                // # hTemp1D = (TH1D *) lMatchingJet->FindObject(histName.Data());
-                // # addHistIntoList(tempLMainEP, hTemp, histName, 1, ptHardBin);
-            }
+            // if(plotQAHists){
+            //     histName = "hJESshift";
+            //     hTemp3D = (TH3D *) lMatchingJet->FindObject(histName.Data());
+            //     addHistIntoList(tempLMainEP, hTemp3D, histName, 1, ptHardBin);
+            //     histName = "hEmbDeltaPt";
+            //     hTemp3D = (TH3D *) lMatchingJet->FindObject(histName.Data());
+            //     addHistIntoList(tempLMainEP, hTemp3D, histName, 1, ptHardBin);
+            //     histName = "hJESshiftHybDet";
+            //     hTemp3D = (TH3D *) lMatchingJet->FindObject(histName.Data());
+            //     addHistIntoList(tempLMainEP, hTemp3D, histName, 1, ptHardBin);
+            //     histName = "hEmbDeltaPtHybDet";
+            //     hTemp3D = (TH3D *) lMatchingJet->FindObject(histName.Data());
+            //     addHistIntoList(tempLMainEP, hTemp3D, histName, 1, ptHardBin);
+            //     histName = "hJESshiftDetPar";
+            //     hTemp3D = (TH3D *) lMatchingJet->FindObject(histName.Data());
+            //     addHistIntoList(tempLMainEP, hTemp3D, histName, 1, ptHardBin);
+            //     histName = "hEmbDeltaPtDetPar";
+            //     hTemp3D = (TH3D *) lMatchingJet->FindObject(histName.Data());
+            //     addHistIntoList(tempLMainEP, hTemp3D, histName, 1, ptHardBin);
+            // 
+            //     histName = "hNEFVsPt";
+            //     hTemp3D = (TH3D *) lMatchingJet->FindObject(histName.Data());
+            //     addHistIntoList(tempLMainEP, hTemp3D, histName, ptHardScaleFactor, ptHardBin);
+            //     histName = "hZLeadingVsPt";
+            //     hTemp3D = (TH3D *) lMatchingJet->FindObject(histName.Data());
+            //     addHistIntoList(tempLMainEP, hTemp3D, histName, ptHardScaleFactor, ptHardBin);
+            //     histName = "hMatchingDistance";
+            //     hTemp3D = (TH3D *) lMatchingJet->FindObject(histName.Data());
+            //     addHistIntoList(tempLMainEP, hTemp3D, histName, ptHardScaleFactor, ptHardBin);
+            //     // histName = "fHistJetMatchingQA"
+            //     // # hTemp1D = (TH1D *) lMatchingJet->FindObject(histName.Data());
+            //     // # addHistIntoList(tempLMainEP, hTemp, histName, 1, ptHardBin);
+            // }
+        
         }
     }
 }
@@ -584,15 +666,15 @@ void PlotPerformanceHistEachCent(TList *lMainTree){
     Double_t reBin = 1.;
     std::cout << "=== s === Add Performance Hists  #############################" << std::endl;
     THnSparse *baseMatchedJetHists = (THnSparse *)lMainTree->FindObject("hResponseMatrixDiff");
-    TH3D *baseHJESshift = (TH3D *) lMainTree->FindObject("hJESshift");
-    TH3D *baseHEmbDeltaPt = (TH3D *) lMainTree->FindObject("hEmbDeltaPt");
-    TH3D *baseHJESshiftHybDet = (TH3D *) lMainTree->FindObject("hJESshiftHybDet");
-    TH3D *baseHEmbDeltaPtHybDet = (TH3D *) lMainTree->FindObject("hEmbDeltaPtHybDet");
-    TH3D *baseHJESshiftDetPar = (TH3D *) lMainTree->FindObject("hJESshiftDetPar");
-    TH3D *baseHEmbDeltaPtDetPar = (TH3D *) lMainTree->FindObject("hEmbDeltaPtDetPar");
-    TH3D *baseHNEFVsPt = (TH3D *) lMainTree->FindObject("hNEFVsPt");
-    TH3D *baseHZLeadingVsPt = (TH3D *) lMainTree->FindObject("hZLeadingVsPt");
-    TH3D *baseHMatchingDistance = (TH3D *) lMainTree->FindObject("hMatchingDistance");
+    // TH3D *baseHJESshift = (TH3D *) lMainTree->FindObject("hJESshift");
+    // TH3D *baseHEmbDeltaPt = (TH3D *) lMainTree->FindObject("hEmbDeltaPt");
+    // TH3D *baseHJESshiftHybDet = (TH3D *) lMainTree->FindObject("hJESshiftHybDet");
+    // TH3D *baseHEmbDeltaPtHybDet = (TH3D *) lMainTree->FindObject("hEmbDeltaPtHybDet");
+    // TH3D *baseHJESshiftDetPar = (TH3D *) lMainTree->FindObject("hJESshiftDetPar");
+    // TH3D *baseHEmbDeltaPtDetPar = (TH3D *) lMainTree->FindObject("hEmbDeltaPtDetPar");
+    // TH3D *baseHNEFVsPt = (TH3D *) lMainTree->FindObject("hNEFVsPt");
+    // TH3D *baseHZLeadingVsPt = (TH3D *) lMainTree->FindObject("hZLeadingVsPt");
+    // TH3D *baseHMatchingDistance = (TH3D *) lMainTree->FindObject("hMatchingDistance");
 
     for(Int_t centBin=iniCentBin;centBin< numOfCentBin; centBin++){
         listName = TString::Format("lCent%d",centBin);
@@ -675,76 +757,76 @@ void PlotPerformanceHistEachCent(TList *lMainTree){
         tempLMainEPCent->Add(hEachCentRM_forUnfold);
         // ########################################################################
 
-        if(plotQAHists){
-            // ###  Add hJESshiftEMCal hist   #########################################
-            std::cout << "8. Add Jet Energy Scale Shift hists  #####" << std::endl;
-            Double_t lJESshiftPtRange[3][2] = {{20,30}, {50,70}, {100,120}};
-            TList *lJESshiftDistHists = new TList();
-            lJESshiftDistHists->SetName("hJESshiftList");
-            
-            histName = TString::Format("hJESshift_Cent%d",centBin);
-            TH3D* hJESshift = (TH3D* )baseHJESshift->Clone();
-            hJESshift->SetName(histName.Data());
-            hJESshift->GetXaxis()->SetRangeUser(centRangeList[centBin][0], centRangeList[centBin][1]);
-            
-            histName = TString::Format("hJESshiftForProj_Cent%d",centBin);
-            TH3D* hJESshift_clone = (TH3D* )hJESshift->Clone();
-            hJESshift_clone->SetName(histName.Data());
-            TH2D *hJESshift_proj = (TH2D* ) hJESshift_clone->Project3D("zyeo");
-            TProfile *hJESshift_prof = (TProfile *)hJESshift_proj->ProfileX();
-            
-            TString xTitle = "#it{p}_{T, particle}^{jet}";
-            TString yTitle = "#frac{#it{p}_{T}^{det} - #it{p}_{T}^{particle}}{#it{p}_{T}^{particle}}";
-            histLabelSetting(hJESshift_prof, histName, xTitle, yTitle, centBin, 1, reBin);
-            tempLMainEPCent->Add(hJESshift_prof);
-
-            std::cout << "8.1 Add Jet Energy Scale Shift projected hists for three jet pt range   #####" << std::endl;
-            Int_t lPtRangeColor[3] = {1, 632, 600};
-            for(Int_t ptRangeKind=0;ptRangeKind<2;ptRangeKind++){
-                histName = TString::Format("hJESshiftDist_Cent%d_ptRange%d",centBin,ptRangeKind);
-                TH3D* hJESshif_clone = (TH3D* ) hJESshift->Clone();
-                hJESshif_clone->SetName(histName.Data());
-                hJESshif_clone->GetYaxis()->SetRangeUser(\
-                    lJESshiftPtRange[ptRangeKind][0], lJESshiftPtRange[ptRangeKind][1]);
-                TH1D* hJESshif_clone_proj = (TH1D *) hJESshif_clone->Project3D("ze");
-
-                xTitle = "#frac{#it{p}_{T}^{det} - #it{p}_{T}^{gen}}{#it{p}_{T}^{gen}}";
-                yTitle = "probability";
-                histLabelSetting(hJESshif_clone_proj, histName, xTitle, yTitle, \
-                    ptRangeKind, 1, reBin);
-                hJESshif_clone_proj->SetLineColor(lPtRangeColor[ptRangeKind]);
-                hJESshif_clone_proj->SetMarkerColor(lPtRangeColor[ptRangeKind]);
-                tempLMainEPCent->Add(hJESshif_clone_proj);
-            }
-            // ########################################################################
-            
-            // ###  Add JER1 hist  ####################################################
-            std::cout << "9. Add Jet Energy Resolution hists 1 way   #####" << std::endl;
-            histName = TString::Format("hJESForJER1_Cent%d",centBin);
-            TProfile* hTempJESforJER = (TProfile* ) hJESshift_prof->Clone();
-            hTempJESforJER->SetName(histName.Data());
-            TProfile* hEachCentJER1 = getJER1(hTempJESforJER, TString::Format("JER1_cent%d",centBin));
-
-            xTitle = "#it{p}_{T, gen}^{jet} [GeV/#it{c}]";
-            yTitle = "#sigma(#frac{#it{p}_{T}^{det} - #it{p}_{T}^{particle}}{#it{p}_{T}^{particle}})";
-            histLabelSetting(hEachCentJER1, histName, xTitle, yTitle, centBin, 1, reBin);
-            tempLMainEPCent->Add(hEachCentJER1);
-            // ########################################################################
-
-            // ###  Add JER2 hist  ####################################################
-            std::cout << "10. Add Jet Energy Resolution hists 2 way  #####" << std::endl;
-            histName = TString::Format("hRM_forJER2_Cent%d",centBin);
-            THnSparse* hTempEachCentRM_forJER = (THnSparse* )tempOriginMatchedJetHists->Clone();
-            TH2D* hEachCentRM_forJER = (TH2D* ) hTempEachCentRM_forJER->Projection(0, 1, "");
-            hEachCentRM_forJER->SetName(histName.Data());
-            TProfile* hEachCentJER2 = getJER2(hEachCentRM_forJER,TString::Format("JER2_cent%d",centBin));
-
-            xTitle = "#it{p}_{T, gen}^{jet} [GeV/#it{c}]";
-            yTitle = "#frac{#sigma(#it{p}_{T}^{gen})}{#it{p}_{T}^{gen}}";
-            histLabelSetting(hEachCentJER2, histName, xTitle, yTitle, centBin, 1, reBin);
-            tempLMainEPCent->Add(hEachCentJER2);
-            // ########################################################################
-        }
+        // if(plotQAHists){
+        //     // ###  Add hJESshiftEMCal hist   #########################################
+        //     std::cout << "8. Add Jet Energy Scale Shift hists  #####" << std::endl;
+        //     Double_t lJESshiftPtRange[3][2] = {{20,30}, {50,70}, {100,120}};
+        //     TList *lJESshiftDistHists = new TList();
+        //     lJESshiftDistHists->SetName("hJESshiftList");
+        // 
+        //     histName = TString::Format("hJESshift_Cent%d",centBin);
+        //     TH3D* hJESshift = (TH3D* )baseHJESshift->Clone();
+        //     hJESshift->SetName(histName.Data());
+        //     hJESshift->GetXaxis()->SetRangeUser(centRangeList[centBin][0], centRangeList[centBin][1]);
+        // 
+        //     histName = TString::Format("hJESshiftForProj_Cent%d",centBin);
+        //     TH3D* hJESshift_clone = (TH3D* )hJESshift->Clone();
+        //     hJESshift_clone->SetName(histName.Data());
+        //     TH2D *hJESshift_proj = (TH2D* ) hJESshift_clone->Project3D("zyeo");
+        //     TProfile *hJESshift_prof = (TProfile *)hJESshift_proj->ProfileX();
+        // 
+        //     TString xTitle = "#it{p}_{T, particle}^{jet}";
+        //     TString yTitle = "#frac{#it{p}_{T}^{det} - #it{p}_{T}^{particle}}{#it{p}_{T}^{particle}}";
+        //     histLabelSetting(hJESshift_prof, histName, xTitle, yTitle, centBin, 1, reBin);
+        //     tempLMainEPCent->Add(hJESshift_prof);
+        // 
+        //     std::cout << "8.1 Add Jet Energy Scale Shift projected hists for three jet pt range   #####" << std::endl;
+        //     Int_t lPtRangeColor[3] = {1, 632, 600};
+        //     for(Int_t ptRangeKind=0;ptRangeKind<2;ptRangeKind++){
+        //         histName = TString::Format("hJESshiftDist_Cent%d_ptRange%d",centBin,ptRangeKind);
+        //         TH3D* hJESshif_clone = (TH3D* ) hJESshift->Clone();
+        //         hJESshif_clone->SetName(histName.Data());
+        //         hJESshif_clone->GetYaxis()->SetRangeUser(\
+        //             lJESshiftPtRange[ptRangeKind][0], lJESshiftPtRange[ptRangeKind][1]);
+        //         TH1D* hJESshif_clone_proj = (TH1D *) hJESshif_clone->Project3D("ze");
+        // 
+        //         xTitle = "#frac{#it{p}_{T}^{det} - #it{p}_{T}^{gen}}{#it{p}_{T}^{gen}}";
+        //         yTitle = "probability";
+        //         histLabelSetting(hJESshif_clone_proj, histName, xTitle, yTitle, \
+        //             ptRangeKind, 1, reBin);      
+        //         hJESshif_clone_proj->SetLineColor(lPtRangeColor[ptRangeKind]);
+        //         hJESshif_clone_proj->SetMarkerColor(lPtRangeColor[ptRangeKind]);
+        //         tempLMainEPCent->Add(hJESshif_clone_proj);
+        //     }
+        //     // ########################################################################
+        // 
+        //     // ###  Add JER1 hist  ####################################################
+        //     std::cout << "9. Add Jet Energy Resolution hists 1 way   #####" << std::endl;
+        //     histName = TString::Format("hJESForJER1_Cent%d",centBin);
+        //     TProfile* hTempJESforJER = (TProfile* ) hJESshift_prof->Clone();
+        //     hTempJESforJER->SetName(histName.Data());
+        //     TProfile* hEachCentJER1 = getJER1(hTempJESforJER, TString::Format("JER1_cent%d",centBin));
+        // 
+        //     xTitle = "#it{p}_{T, gen}^{jet} [GeV/#it{c}]";
+        //     yTitle = "#sigma(#frac{#it{p}_{T}^{det} - #it{p}_{T}^{particle}}{#it{p}_{T}^{particle}})";
+        //     histLabelSetting(hEachCentJER1, histName, xTitle, yTitle, centBin, 1, reBin);
+        //     tempLMainEPCent->Add(hEachCentJER1);
+        //     // ########################################################################
+        // 
+        //     // ###  Add JER2 hist  ####################################################
+        //     std::cout << "10. Add Jet Energy Resolution hists 2 way  #####" << std::endl;
+        //     histName = TString::Format("hRM_forJER2_Cent%d",centBin);
+        //     THnSparse* hTempEachCentRM_forJER = (THnSparse* )tempOriginMatchedJetHists->Clone();
+        //     TH2D* hEachCentRM_forJER = (TH2D* ) hTempEachCentRM_forJER->Projection(0, 1, "");
+        //     hEachCentRM_forJER->SetName(histName.Data());
+        //     TProfile* hEachCentJER2 = getJER2(hEachCentRM_forJER,TString::Format("JER2_cent%d",centBin));
+        // 
+        //     xTitle = "#it{p}_{T, gen}^{jet} [GeV/#it{c}]";
+        //     yTitle = "#frac{#sigma(#it{p}_{T}^{gen})}{#it{p}_{T}^{gen}}";
+        //     histLabelSetting(hEachCentJER2, histName, xTitle, yTitle, centBin, 1, reBin);
+        //     tempLMainEPCent->Add(hEachCentJER2);
+        //     // ########################################################################
+        // }
         
         // // ###  Add hNEFVsPt hist   ###############################################
         // std::cout << "10. Add NEFVsPt                       #####" << std::endl;
@@ -754,13 +836,13 @@ void PlotPerformanceHistEachCent(TList *lMainTree){
         // hNEFVsPt->GetXaxis()->SetRangeUser(centRangeList[centBin][0], centRangeList[centBin][1]);
         // hNEFVsPt_proj = hNEFVsPt->Project3D("zyeo");
         // hNEFVsPt_profX = hNEFVsPt_proj->ProfileX();
-
+        // 
         // xTitle = "#it{p}_{T, gen}^{jet}";
         // yTitle = "NEF";
         // histLabelSetting(hNEFVsPt_profX, histName, xTitle, yTitle, centBin, 1, reBin);
         // tempLMainEPCent->Add(hNEFVsPt_profX);
         // // ##############################################################################
-
+        // 
         // ###  Add hZLeadingVsPt hist   ################################################
         // histName = TString::Format("hZLeadingVsPt_Cent%d",centBin);
         // hZLeadingVsPt = baseHZLeadingVsPt->Clone();
@@ -768,7 +850,7 @@ void PlotPerformanceHistEachCent(TList *lMainTree){
         // hZLeadingVsPt->GetXaxis()->SetRangeUser(centRangeList[centBin][0], centRangeList[centBin][1]);
         // hZLeadingVsPt_proj = hZLeadingVsPt->Project3D("zyeo");
         // hZLeadingVsPt_profX = hZLeadingVsPt_proj->ProfileX();
-
+        // 
         // xTitle = "#it{p}_{T, gen}^{jet} [GeV/#it{c}]";
         // yTitle = "zLeading #it{p}_{T}";
         // histLabelSetting(hZLeadingVsPt_profX, histName, xTitle, yTitle, centBin, 1, reBin);
@@ -781,7 +863,7 @@ void PlotPerformanceHistEachCent(TList *lMainTree){
 //     ptBinArrayDict = PtRangeList->eachJetPtBinDef(1, ptRangeDict)
 //     hRM_rebin = rebinRM(outList, hOriginRM, ptBinArrayDict)
 //     hRM_norm = normalizeRM(outList,hRM_rebin, outList, ptBinArrayDict)
-    
+    // 
 //     return hRM_norm
 
 // ################################################################################
@@ -808,17 +890,17 @@ void PlotPerformanceHistEachCent(TList *lMainTree){
 //             x = hOriginRM->GetXaxis()->GetBinCenter(detBin)
 //             y = hOriginRM->GetYaxis()->GetBinCenter(genBin)
 //             hRM_rebin->Fill(x, y, oldContent)
-
+//             
 //             #print "Adding value {} from bin ({},{}) = ({},{})"->format(oldContent, ibin, jbin, x, y)
 //             #newBin = hRM_rebin->FindBin(x,y)
 //             #print "New bin content: {}"->format(hRM_rebin->GetBinContent(newBin))
-    
+//  
 //     # Assume 0 errors on response matrix
 //     for bin in range(1, hRM_rebin->GetNcells() + 1):
 //         hRM_rebin->SetBinError(bin, 0)
-
+// 
 //     outList->Add(hRM_rebin)
-
+// 
 //     return hRM_rebin
 
 // ################################################################################
@@ -834,11 +916,11 @@ void PlotPerformanceHistEachCent(TList *lMainTree){
 //     # Do exclude under and overflow bins
 //     hGenProjBefore = hRM_rebin->ProjectionY("_py",1,hRM_rebin->GetNbinsX()) 
 //     hGenProjBefore->SetName("hGenProjectionBefore");
-
+// 
 //     histname = "{}Normed"->format(hRM_rebin->GetName())
 //     title = histname + ";#it{p}_{T,corr}^{det} (GeV/#it{c});#it{p}_{T}^{truth} (GeV/#it{c})"
 //     hRM_norm = ROOT->TH2D(histname, title, nDetBins, detBinArray, nGenBins, genBinArray)
-
+// 
 //     # Loop through truth-level bins, and apply normalization factor to all bins->
 //     nBinsY = hRM_rebin->GetNbinsY() # pT-gen
 //     nBinsX = hRM_rebin->GetNbinsX() # pT-det
@@ -846,17 +928,17 @@ void PlotPerformanceHistEachCent(TList *lMainTree){
 //         normFactor = hGenProjBefore->GetBinContent(genBin)
 //         if normFactor > 0:
 //             genBinCenter = hGenProjBefore->GetXaxis()->GetBinCenter(genBin)
-
+// 
 //             for detBin in range(1,nBinsX+1):
 //                 binContent = hRM_rebin->GetBinContent(detBin, genBin)
 //                 # hRM_rebin->SetBinContent(detBin, genBin, binContent/normFactor)
 //                 hRM_norm->SetBinContent(detBin, genBin, binContent/normFactor)
-        
+// 
 //     # Plot response matrix
 //     c = ROOT->TCanvas("c","c: hist",600,450)
 //     c->cd()
 //     c->cd()->SetLeftMargin(0.15)
-
+// 
 //     # hRM_rebin->Draw("colz");
 //     hRM_norm->Draw("colz");
 //     line = ROOT->TLine(minPtDet,0,minPtDet,250)
@@ -875,15 +957,20 @@ void PlotPerformanceHistEachCent(TList *lMainTree){
 //     line4->SetLineColor(0)
 //     line4->SetLineStyle(2)
 //     line4->Draw("same");
-    
+// 
 //     # c->SaveAs("hoge->root");
 //     c->Close()
-
+// 
 //     outList->Add(hRM_norm)
-
+// 
 //     return hRM_norm
 
-
+Double_t movePhaseShift(Double_t jetAngle){
+    if(jetAngle > TMath::Pi())   jetAngle -= TMath::Pi();
+    if(jetAngle > TMath::Pi()/2) jetAngle = TMath::Pi() - jetAngle;
+    
+    return jetAngle;
+}
 
 // ################################################################################
 // # Plot JER                                                                    ##
@@ -995,7 +1082,6 @@ void histLabelSetting(TH1D *outputHist, TString histTitle, TString xTitle, TStri
 
     outputHist->Rebin(Rebin);
 }
-
 void histLabelSetting(TH2D *outputHist, TString histTitle, TString xTitle, TString yTitle, \
     Int_t histNumber, Int_t fillType, Double_t Rebin){
     outputHist->SetTitle(histTitle.Data());
