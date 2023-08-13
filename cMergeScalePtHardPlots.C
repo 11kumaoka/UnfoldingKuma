@@ -46,11 +46,15 @@ Double_t ptRangeDictReport[2] = {40.,120.};
 
 TString lEPLabel[3] = {"OutOfPlane", "InPlane", "Inclusive"};
 
+TString LHCPeriod = "LHC18q";
+Int_t mCentBin = 0;
 Int_t leadingTrackPtCut = 5; // 0, 5, 7 GeV/c
-TString trackEff = ""; // 98%: "", 94%: "TrackEff094"
+// // 'BKGNoFit', 'BKGV2', 'V0C', 'V0A'
+TString diffSys = ""; // 98%: "", 94%: "TrackEff094"
 
-// Int_t PtHardBins = 21;
-Int_t PtHardBins = 2;
+Int_t PtHardBins = 21;
+// Int_t PtHardBins = 2;
+
 
 Int_t variation = 1;
 Double_t minPtGen = 10.;
@@ -99,7 +103,7 @@ Int_t GetNEvents(TString inEmbFileBaseName, TString taskName, Int_t bin, TH1D *h
 void eachPtHardBinScaleFact(TString inEmbFileBaseName, TString taskName, Int_t PtHardBins, \
     TH1D *hNEventsAcc, TH1D *hNEventsTot, Int_t nEventsAccAvg, Int_t nNEventsTotAvg,\
         Double_t *lScaleFactor, Double_t *lPtHardEventNum, TList *lMainTree);
-void ExtractDataRawJet(TList * lMainTree);
+void ExtractDataRawJet(TString inRawJetFile, Int_t leadingTrackPtCut, TString diffSys, Int_t mCentBin, TList *lMainTree);
 void ScaleJetHists(TList * lMainTree, Double_t lScaleFactor[20], Int_t PtHardBins, TString inEmbFileBaseName, TString jetTaskName);
 void PlotPerformanceHistEachCent(TList *lMainTree);
 
@@ -122,27 +126,41 @@ void histLabelSetting(TH2D *outputHist, TString histTitle, TString xTitle, TStri
     Int_t histNumber, Int_t fillType, Double_t Rebin);
 void histLabelSetting(TH3D *outputHist, TString histTitle, TString xTitle, TString yTitle, \
     Int_t histNumber, Int_t fillType, Double_t Rebin);
-void histLabelSetting(TProfile *outputHist, TString histTitle, TString xTitle, TString yTitle, \
+void histLabelSetting(TProfile *outputHist, TString histTitle,TString xTitle,TString yTitle, \
     Int_t histNumber, Int_t fillType, Double_t Rebin);
 
-TString inRawJetFile = "~/ALICE/cernbox/SWAN_projects/outputFiles/LHC18r/pass3/Ch/RawJet/TrainAnaResTreeBKGWay.root";
+// TString inRawJetFile = "~/ALICE/cernbox/SWAN_projects/outputFiles/LHC18r/pass3/Ch/RawJet/TrainAnaResTreeBKGWay.root";
 // TString inEmbFileDir = "./";
 // TString inEmbFileDir = "/Volumes/KumaSSD/TrainOutput/LHC18q/Embedding/8870/";
 TString inEmbFileDir = "~/ALICE/cernbox/SWAN_projects/outputFiles/LHC18r/pass3/Ch/Embedding/Train/8870/";
 
 TString inEmbFileBaseName = inEmbFileDir + "AnalysisResultsPtHard";
-TString outEmbFileDir = "./";
-// TString outEmbFileDir = "~/ALICE/cernbox/SWAN_projects/outputFiles/LHC18r/pass3/Ch/Embedding/";
+// TString outEmbFileDir = "./";
+TString outEmbFileDir = "~/ALICE/cernbox/SWAN_projects/outputFiles/LHC18r/pass3/Ch/Embedding/";
+
 
 // ###################################################################################
 // # Main function
-int main(){
-    TString outEmbFile = TString::Format("%sEmbedPtHardScaledResults_TrackPtCut%d_%s_1.root"\
-        , outEmbFileDir.Data(), leadingTrackPtCut, trackEff.Data());
+int main(int argc, char *argv[]){
+    std::cout << "input : " << argv[1] << ", "<< argv[2] << ", "<< argv[3] << ", "<< argv[4] << std::endl;
+    
+    mCentBin = atoi(argv[1]);
+    LHCPeriod = argv[2];
+    leadingTrackPtCut = atoi(argv[3]);
+    diffSys = argv[4];
+
+    TString inRawJetFile = TString::Format("~/ALICE/cernbox/SWAN_projects/outputFiles/%s/pass3/Ch/RawJet/", LHCPeriod.Data());
+    if((diffSys != "V0M") && (diffSys != "V0C") && (diffSys != "V0A")) {
+        inRawJetFile += "TrainAnaResTreeBKGWay.root";
+    }else  inRawJetFile += "TrainAnaResTreeBKGWayDiffV0.root";
+
+    TString outEmbFile = TString::Format("%sEmbedPtHardScaledResults_TrackPtCut%d_%s_CentBin%d.root"\
+        , outEmbFileDir.Data(), leadingTrackPtCut, diffSys.Data(), mCentBin);
 
     TString embHelperTaskName = "AliAnalysisTaskEmcalEmbeddingHelper_histos";
-    // # TString jetTaskName = "AliAnalysisTaskEmbeddingJetWithEP_1_new_histos";
-    TString jetTaskName = TString::Format("AliAnalysisTaskEmbeddingJetWithEP_R02PtCut%d%s_histos", leadingTrackPtCut,trackEff.Data());
+    TString tempDiffSys = diffSys;
+    if((diffSys == "Norm")||(diffSys == "V0M")) tempDiffSys = "";
+    TString jetTaskName = TString::Format("AliAnalysisTaskEmbeddingJetWithEP_R02PtCut%d%s_histos", leadingTrackPtCut, tempDiffSys.Data());
     
     // # Create histogram of NEvents accepted and NEvents acc+rej, as a function of pT-hard bin
     TH1D *hNEventsAcc = new TH1D("hNEventsAcc", "hNEventsAccepted", PtHardBins+1, 0, PtHardBins+1);
@@ -179,7 +197,7 @@ int main(){
         hNEventsAcc, hNEventsTot, nEventsAccAvg, nNEventsTotAvg,\
             lScaleFactor, lPtHardEventNum, lMainTree);
     
-    ExtractDataRawJet(lMainTree);
+    ExtractDataRawJet(inRawJetFile, leadingTrackPtCut, diffSys, mCentBin, lMainTree);
 
     std::cout << "lScaleFactor = [" << "\n";
     for (int i = 0; i < 20; i++) std::cout << lrefPtHardScalFactor[i] << ", " << "\n"; 
@@ -192,15 +210,21 @@ int main(){
 }
 
 // ###################################################################################
-void ExtractDataRawJet(TList *lMainTree){
+void ExtractDataRawJet(TString inRawJetFile, Int_t leadingTrackPtCut, TString diffSys, Int_t mCentBin, TList *lMainTree){
     TString histName = ""; 
     TString histTitle = "";
     TString listName = "";
 
     TFile *f = new TFile(inRawJetFile.Data(), "READ");
     
+    TString diffSysName = "";    
+    if((diffSys == "Norm")||(diffSys == "V0M")) diffSysName = "";
+    else if((diffSys == "V0C") || (diffSys == "V0A")) diffSysName = diffSys;
+    else if(diffSys == "BKGNoFit") diffSysName = "kNoFit";
+    else if(diffSys == "BKGV2") diffSysName = "kV2";
     TString mainJetTaskName \
-        = TString::Format("AliAnalysisTaskRawJetWithEP_R02PtCut%d_histos",leadingTrackPtCut);
+        = TString::Format("AliAnalysisTaskRawJetWithEP_R02PtCut%d%s_histos",\
+            leadingTrackPtCut,diffSysName.Data());
     TList *lMainHJetDists = (TList *) f->Get(mainJetTaskName.Data());
     
     TString jetTaskName = "Jet_AKTChargedR020_tracks_pT0150_pt_scheme";
@@ -221,33 +245,39 @@ void ExtractDataRawJet(TList *lMainTree){
     TString jetHistName = "hJetCorrPtVsEP2AngleVsCent";
     TH3D *hRawJet3D = (TH3D *)lHJetDistsInc->FindObject(jetHistName.Data());
     if(!hRawJet3D) std::cout << "ERROR no hJetCorrPtVsEP2AngleVsCent found" << std::endl;
-    for(Int_t centBin=iniCentBin; centBin<numOfCentBin; centBin++){
-        listName = TString::Format("lCent%d",centBin);
-        TList* tempLMainIncCent = (TList *) tempLMainInc->FindObject(listName.Data());
-        histName = TString::Format("hRawJet3D_Cent%d",centBin);
-        TH3D *hRawJet3DCP = (TH3D *) hRawJet3D->Clone(histName.Data());
-        hRawJet3DCP->GetZaxis()->SetRangeUser(centRangeList[centBin][0], centRangeList[centBin][1]);
-        TH2D *hRawJet2D = (TH2D *) hRawJet3DCP->Project3D("xy");
-
-        hRawJet2D->SaveAs("hRawJet2D.root");
-        histName = TString::Format("hRawJet2D_Cent%d",centBin);
-        histTitle = TString::Format("hRawJet2D_Cent%d; #it{p}_{T,jet}^{corr} [GeV/#it{c}];#phi^{jet}-#Psi_{EP, 2}",centBin);
-        TH2D* hRawJet2DShiftPhase = new TH2D(histName, histTitle, 250, 0., 250., 6, 0., TMath::Pi()/2);
-
-        Int_t origPtNBin = hRawJet2D->GetNbinsX();
-        Int_t origPhiNBin = hRawJet2D->GetNbinsY();
-        for(Int_t ptBin=1; ptBin<origPtNBin; ptBin++){
-            for(Int_t phiBin=1; phiBin<origPhiNBin; phiBin++){
-                Double_t fillContent = hRawJet2D->GetBinContent(ptBin, phiBin);
-                Double_t jetPt = hRawJet2D->GetXaxis()->GetBinCenter(ptBin);
-                Double_t jetAngle = hRawJet2D->GetYaxis()->GetBinCenter(phiBin);
-                jetAngle = movePhaseShift(jetAngle);
-                hRawJet2DShiftPhase->Fill(jetPt, jetAngle, fillContent);
-            }
-        }
-        tempLMainIncCent->Add(hRawJet2DShiftPhase);
+    
+    // ## S ## Centrality Loop #################
+    // for(Int_t mCentBin=iniCentBin; mCentBin<numOfCentBin; mCentBin++){
+    listName = TString::Format("lCent%d",mCentBin);
+    TList* tempLMainIncCent = (TList *) tempLMainInc->FindObject(listName.Data());
+    histName = TString::Format("hRawJet3D_Cent%d",mCentBin);
+    TH3D *hRawJet3DCP = (TH3D *) hRawJet3D->Clone(histName.Data());
+    hRawJet3DCP->GetZaxis()->SetRangeUser(centRangeList[mCentBin][0], centRangeList[mCentBin][1]);
+    TH2D *hRawJet2D = (TH2D *) hRawJet3DCP->Project3D("xy");
+    
+    hRawJet2D->SaveAs("hRawJet2D.root");
+    histName = TString::Format("hRawJet2D_Cent%d",mCentBin);
+    histTitle = TString::Format("hRawJet2D_Cent%d; #phi^{jet}-#Psi_{EP, 2}; #it{p}_{T,jet}^{corr} [GeV/#it{c}];",mCentBin);
+    TH2D* hRawJet2DShiftPhase = new TH2D(histName, histTitle,  6, 0., TMath::Pi()/2, 300, -50., 250.);
+    
+    Int_t origAllNBin = hRawJet2D->GetNcells();
+    for(Int_t allBin=1; allBin<origAllNBin+1; allBin++){
+        Int_t phiBin = 0;
+        Int_t ptBin = 0;
+        Int_t zBin = 0;
+        hRawJet2D->GetBinXYZ(allBin, phiBin, ptBin, zBin);
+        // Double_t fillContent = hRawJet2D->GetBinContent(phiBin, ptBin);
+        Double_t fillContent = hRawJet2D->GetBinContent(allBin);
+        Double_t jetAngle = hRawJet2D->GetXaxis()->GetBinCenter(phiBin);
+        Double_t jetPt = hRawJet2D->GetYaxis()->GetBinCenter(ptBin);
+        // std::cout << "content:: phi, pt = " << fillContent << ", " << jetAngle  << ", " << jetPt << std::endl;
+        jetAngle = movePhaseShift(jetAngle);
+        hRawJet2DShiftPhase->Fill(jetAngle, jetPt, fillContent);
     }
-
+    
+    tempLMainIncCent->Add(hRawJet2DShiftPhase);
+    // } // ## E ## Centrality Loop #################
+    
     // for(Int_t epBin=0; epBin < 2; epBin++){
     //     TList* tempLMainEP = (TList *) lMainTree->FindObject(lEPLabel[epBin].Data());
     //     for(Int_t centBin=iniCentBin; centBin<numOfCentBin; centBin++){
@@ -479,79 +509,81 @@ void ScaleJetHists(TList * lMainTree, Double_t lScaleFactor[20], Int_t PtHardBin
         THnSparse* hRMWithEP2 = new THnSparseD("hRMWithEP2Angle", titleFourDRM, 4, nbinsFourDRM, minValFourDRM, maxValFourDRM);
         
         TList* tempLMainInc = (TList *) lMainTree->FindObject("Inclusive");
-        for(Int_t centBin=iniCentBin; centBin < numOfCentBin; centBin++){
-            std::cout<< "          ## s 11 START centrality : "<< centBin <<"  ##"<<std::endl;
-            listName = TString::Format("lCent%d",centBin);
-            TList* tempLMainIncCent = (TList *) tempLMainInc->FindObject(listName.Data());
+        // ## S ## Centrality Loop #################
+        // for(Int_t mCentBin=iniCentBin; mCentBin < numOfCentBin; mCentBin++){
+        std::cout<< "          ## s 11 START centrality : "<< mCentBin <<"  ##"<<std::endl;
+        listName = TString::Format("lCent%d", mCentBin);
+        TList* tempLMainIncCent = (TList *) tempLMainInc->FindObject(listName.Data());
+        
+        histName = "hRMWithEP2Angle";
+        THnSparse *hTempMD = (THnSparse *) lHEventInfo->FindObject(histName.Data());
+        
+        Int_t nBins0 = hTempMD->GetAxis(0)->GetNbins();
+        Int_t nBins1 = hTempMD->GetAxis(1)->GetNbins();
+        Int_t nBins2 = hTempMD->GetAxis(2)->GetNbins();
+        Int_t nBins3 = hTempMD->GetAxis(3)->GetNbins();
+        Int_t nBins4 = hTempMD->GetAxis(4)->GetNbins();
+        
+        Int_t printCount = 0;
+        Int_t binList[4] = {0,0,0,0};
+        Double_t binValList[4] = {0.,0.,0.,0.};
+        Double_t tempBinValList[5] = {0.,0.,0.,0.,0.};
+        Int_t embCentBinNunRange[5][2] = {{1,1},{2,2},{3,6},{7,10},{11,17}};
+        
+        hTempMD->GetAxis(4)->SetRange(embCentBinNunRange[mCentBin][0], embCentBinNunRange[mCentBin][1]);
+        Int_t dimX[4] = {0,1,2,3};
+        THnSparse *hTemp4D = hTempMD->Projection (4, dimX);
+        Long64_t allNBinId = hTemp4D->GetNbins();
+        for(Long64_t allBin = 1; allBin < allNBinId+1; allBin++){
+            Long64_t totalBinNum = allBin;
+            Int_t binList2[4] = {0,0,0,0};
+            Double_t fillBinContent = hTemp4D->GetBinContent(totalBinNum, binList2);
+            Double_t fillBinErr = hTemp4D->GetBinError2(totalBinNum);
             
-            histName = "hRMWithEP2Angle";
-            THnSparse *hTempMD = (THnSparse *) lHEventInfo->FindObject(histName.Data());
-
-            Int_t nBins0 = hTempMD->GetAxis(0)->GetNbins();
-            Int_t nBins1 = hTempMD->GetAxis(1)->GetNbins();
-            Int_t nBins2 = hTempMD->GetAxis(2)->GetNbins();
-            Int_t nBins3 = hTempMD->GetAxis(3)->GetNbins();
-            Int_t nBins4 = hTempMD->GetAxis(4)->GetNbins();
+            Int_t binContent = hTemp4D->GetBinContent(binList);
+            Double_t genJetPt = hTemp4D->GetAxis(0)->GetBinCenter(binList2[0]);
+            Double_t detJetPt = hTemp4D->GetAxis(1)->GetBinCenter(binList2[1]);
+            Double_t genJetAngle = hTemp4D->GetAxis(2)->GetBinCenter(binList2[2]);
+            Double_t detJetAngle = hTemp4D->GetAxis(3)->GetBinCenter(binList2[3]);
+            genJetAngle = movePhaseShift(genJetAngle);
+            detJetAngle = movePhaseShift(detJetAngle);
             
-            Int_t printCount = 0;
-            // Int_t binList[5] = {0,0,0,0,0};
-            Int_t binList[4] = {0,0,0,0};
-            Double_t binValList[4] = {0.,0.,0.,0.};
-            Double_t tempBinValList[5] = {0.,0.,0.,0.,0.};
-            Int_t embCentBinNunRange[5][2] = {{1,1},{2,2},{3,6},{7,10},{11,17}};
+            binValList[0] = genJetPt;
+            binValList[1] = detJetPt;
+            binValList[2] = genJetAngle;
+            binValList[3] = detJetAngle;
             
-            hTempMD->GetAxis(4)->SetRange(embCentBinNunRange[centBin][0], embCentBinNunRange[centBin][1]);
-            hTempMD->SaveAs("ScaleRM.root");
-            Int_t dimX[4] = {0,1,2,3};
-            Long64_t binId = 0;
-            THnSparse *hTemp4D = hTempMD->Projection (4, dimX);
-            Long64_t allNBinId = hTemp4D->GetNbins();
-            for(Long64_t allBin = 1; allBin < allNBinId+1; allBin++){
-                Long64_t totalBinNum = allBin;
-                Int_t binList2[4] = {0,0,0,0};
-                Double_t fillBinContent = hTemp4D->GetBinContent(totalBinNum, binList2);
-                Double_t fillBinErr = hTemp4D->GetBinError2(totalBinNum);
-
-                Int_t binContent = hTemp4D->GetBinContent(binList);
-                Double_t genJetPt = hTemp4D->GetAxis(0)->GetBinCenter(binList2[0]);
-                Double_t detJetPt = hTemp4D->GetAxis(1)->GetBinCenter(binList2[1]);
-                Double_t genJetAngle = hTemp4D->GetAxis(2)->GetBinCenter(binList2[2]);
-                Double_t detJetAngle = hTemp4D->GetAxis(3)->GetBinCenter(binList2[3]);
-                genJetAngle = movePhaseShift(genJetAngle);
-                detJetAngle = movePhaseShift(detJetAngle);
-                
-                binValList[0] = genJetPt;
-                binValList[1] = detJetPt;
-                binValList[2] = genJetAngle;
-                binValList[3] = detJetAngle;
-
-                Int_t fillBinList[4] = {0,0,0,0};
-                for(Int_t i = 0; i<4; i++) fillBinList[i] = binList2[i];
-                Int_t fillTotalBinNum = hRMWithEP2->GetBin(binValList);
+            Int_t fillBinList[4] = {0,0,0,0};
+            for(Int_t i = 0; i<4; i++) fillBinList[i] = binList2[i];
+            Int_t fillTotalBinNum = hRMWithEP2->GetBin(binValList);
+            
+            if(genJetAngle!=TMath::Pi()/2 || detJetAngle!=TMath::Pi()/2){
                 hRMWithEP2->Fill(binValList, fillBinContent);
-
-                    // if(printCount%100010==0){
-                    if(printCount>0){
-                        std::cout << "fill count2 : binerror :: binId : genPt : detPt : genPhi : detPhi = " << \
-                        fillBinContent << " : "<< fillBinErr << " :: " \
-                        << totalBinNum << " : " << genJetPt << " : "<< detJetPt << " : " \
-                        << genJetAngle << " : " << detJetAngle << std::endl;
-                    }
-                    printCount+= 1;
-                    binId += 1;
             }
             
-            hRMWithEP2->Sumw2();
-            // hRMWithEP2->Scale(ptHardScaleFactor);
-            if(ptHardBin == 1) tempLMainIncCent->Add(hRMWithEP2);
-            else{
-                THnSparse* tempHist = (THnSparse*) tempLMainIncCent->FindObject(histName.Data());
-                tempHist->Add(hRMWithEP2);
-            }
             
+            // if(printCount%100010==0){
+            // if(printCount>0){
+            if(0){
+                std::cout << "fill count2 : binerror :: binId : genPt : detPt : genPhi : detPhi = " << \
+                fillBinContent << " : "<< fillBinErr << " :: " \
+                << totalBinNum << " : " << genJetPt << " : "<< detJetPt << " : " \
+                << genJetAngle << " : " << detJetAngle << std::endl;
+            }
+            printCount+= 1;
         }
+        
+        hRMWithEP2->Sumw2();
+        hRMWithEP2->Scale(ptHardScaleFactor);
+        if(ptHardBin == 1) tempLMainIncCent->Add(hRMWithEP2);
+        else{
+            THnSparse* tempHist = (THnSparse*) tempLMainIncCent->FindObject(histName.Data());
+            tempHist->Add(hRMWithEP2);
+        }
+        
+        // } // ## E ## Centrality Loop #################
         // == e ==  Excute 4D RM =============
-
+        
         // # Look for the EventCutOutput from AliEventCuts, and if it doesn't exist, look for histo fHistEventCount
         // TH1D* lHybRawJet = (TH1D *)lHEventInfo->FindObject("hybridRawJet");
         // TH1D* lParRawJet = (TH1D *)lHEventInfo->FindObject("particleRawJet");
