@@ -22,7 +22,7 @@ def HAddOutputScaledFiles(LHCPeriod, leadingTrackPtCut,  diffSys):
     # outEmbFileDir = './'
     outEmbFileDir = '~/ALICE/cernbox/SWAN_projects/outputFiles/'+LHCPeriod+'/pass3/Ch/Embedding/'
     outEmbFile = outEmbFileDir + 'EmbedPtHardScaledResults'\
-        +'_TrackPtCut'+str(leadingTrackPtCut)+'_'+diffSys+'_Ver1.root'
+        +'_TrackPtCut'+str(leadingTrackPtCut)+'_'+diffSys+'.root'
 
     outRootFile = ROOT.TFile(outEmbFile, 'RECREATE')
     lMainTree = ROOT.TList()
@@ -35,7 +35,7 @@ def HAddOutputScaledFiles(LHCPeriod, leadingTrackPtCut,  diffSys):
             inEmbFileDir = '~/ALICE/cernbox/SWAN_projects/outputFiles/'\
                 +LHCPeriod+'/pass3/Ch/Embedding/'
             inEmbFileName = inEmbFileDir + 'EmbedPtHardScaledResults'\
-                +'_TrackPtCut'+str(leadingTrackPtCut)+'_'+diffSys+'_CentBin'+str(centBin)+'_Ver1.root'
+                +'_TrackPtCut'+str(leadingTrackPtCut)+'_'+diffSys+'_CentBin'+str(centBin)+'.root'
             print('Open: '+inEmbFileName)
             inputFile = ROOT.TFile(inEmbFileName, "READ")
             iMainTree = inputFile.Get('mainTree')

@@ -40,6 +40,7 @@ lFillColor = [1, 632, 600, 416+3, 800+8, 860+10, 900+10, 820+4, 880+1, 900+9, 82
 lEPLabel = ['OutOfPlane', 'InPlane', 'Inclusive']
 leadingTrackPtCut = 5 # 0, 5, 7 GeV/c
 diffSys = 'V0A' # 98%: '', 94%: 'TrackEff094', 'BKGNoFit', 'BKGV2', 'V0C', 'V0A'
+lDiffSys = ['TrackEff094', 'BKGNoFit', 'BKGV2', 'V0C', 'V0A', '']
 
 JetR = 2 # [2, 3, 4, 5]
 lPtCut = [0, 3, 5, 7, 10]
@@ -66,84 +67,89 @@ oPerformanceDir = outputDir + 'UnfoldPerformancePlot/'
 
 ### Main START  ################################################################
 def UnfoldJetPtDist():
-    inputFileName = 'EmbedPtHardScaledResults'\
-        +'_TrackPtCut'+str(leadingTrackPtCut)+'_'+diffSys+'_Ver1.root'
-    outputFileName =  outputDir + 'UnfoldedPtDists'\
-        +'_TrackPtCut'+str(leadingTrackPtCut)+'_'+diffSys+'.root'
+    for diffBin in range(0, 6):
+        diffSys = lDiffSys[diffBin]
 
-    ROOT.gROOT.ProcessLine("gErrorIgnoreLevel = kError;"); #..to supress a lot of standard output
-    baseLabel = ''
+        inputFileName = 'EmbedPtHardScaledResults'\
+            +'_TrackPtCut'+str(leadingTrackPtCut)+'_'+diffSys+'_Ver1.root'
+        outputFileName =  outputDir + 'UnfoldedPtDists'\
+            +'_TrackPtCut'+str(leadingTrackPtCut)+'_'+diffSys+'.root'
 
-    #Things to set for
-    smearErrors    = True
-    imposePrior    = False
-    useRMflexibleR = False  
-    matchingDistance = 0.6   #in % of jet radius
-    
-    inputFile = ROOT.TFile(inputDir + inputFileName, "READ")
-    mainTree = inputFile.Get('mainTree')
+        ROOT.gROOT.ProcessLine("gErrorIgnoreLevel = kError;"); #..to supress a lot of standard output
+        baseLabel = ''
 
-    outputFile = ROOT.TFile(outputFileName, "RECREATE")
-    lOMainTree = ROOT.TList()
-    OFileStracture(lOMainTree, numOfCentBin)
-    outputFile.cd()
+        #Things to set for
+        smearErrors    = True
+        imposePrior    = False
+        useRMflexibleR = False  
+        matchingDistance = 0.6   #in % of jet radius
+        
+        inputFile = ROOT.TFile(inputDir + inputFileName, "READ")
+        mainTree = inputFile.Get('mainTree')
 
-    for epBin in range(0, 3):
-        obsKind = 0
-        if epBin == 2: obsKind = 1
-        for centBin in range(0, numOfCentBin):
-            ptRangeDict, ptBinArrayDict = PtRangeList.eachJetPtBinDef(obsKind, centBin)
+        outputFile = ROOT.TFile(outputFileName, "RECREATE")
+        lOMainTree = ROOT.TList()
+        OFileStracture(lOMainTree, numOfCentBin)
+        outputFile.cd()
 
-            label = ''
-            label = baseLabel
-            # label = label + '_cent{}'.format(centBin) + '_' +lEPLabel[epBin]
+        for epBin in range(0, 3):
+            obsKind = 0
+            if epBin == 2: obsKind = 1
+            for centBin in range(0, numOfCentBin):
+                ptRangeDict, ptBinArrayDict = PtRangeList.eachJetPtBinDef(obsKind, centBin)
 
-            nEventsData, nEventsResponse, vertexEfficiency = eventInfoExtract(mainTree, centBin)
-            scalePraDict = {'nEventsData':nEventsData, 'nEventsResponse':nEventsResponse,\
-                'vertexEfficiency':vertexEfficiency}
-            print(scalePraDict)
-            
-            # mainTree[epBin][centBin].ls()
-            hRMDict = getResponseMatrix(mainTree[epBin][centBin], centBin, ptRangeDict, ptBinArrayDict, label)
+                label = ''
+                label = baseLabel
+                # label = label + '_cent{}'.format(centBin) + '_' +lEPLabel[epBin]
 
-            jetSpectDict = getJetSpectrums(mainTree[epBin][centBin], hRMDict, \
-                ptRangeDict, ptBinArrayDict, scalePraDict, centBin, label)
-            
-            responsDict = getResponce(mainTree[epBin][centBin], hRMDict, jetSpectDict, label)
-            
-            label =  lEPLabel[epBin]+'/Cent'+str(centBin)+'/'
-            hKinEff = UnfoldPlots.plotKinematicEfficiency(hRMDict['main'], hRMDict['uncut'], \
-                jetSpectDict, ptRangeDict, ptBinArrayDict, label, oPerformanceDir)
-            lOMainTree[epBin][centBin].Add(hKinEff)
+                nEventsData, nEventsResponse, vertexEfficiency = eventInfoExtract(mainTree, centBin)
+                scalePraDict = {'nEventsData':nEventsData, 'nEventsResponse':nEventsResponse,\
+                    'vertexEfficiency':vertexEfficiency}
+                print(scalePraDict)
+                
+                # mainTree[epBin][centBin].ls()
+                hRMDict = getResponseMatrix(mainTree[epBin][centBin], centBin, ptRangeDict, ptBinArrayDict, label)
 
-            unfoldType = 'Bayes'
-            hUnfoldedDistDictBayes = UnfoldJetSpectrum(hRMDict, responsDict, jetSpectDict, hKinEff,\
-                ptRangeDict, ptBinArrayDict, unfoldType, label, epBin, centBin)
-            unfoldType = 'SVD'
-            # hUnfoldedDistDictSVD = UnfoldJetSpectrum(hRMDict, responsDict, jetSpectDict, hKinEff, \
-            #   ptRangeDict, ptBinArrayDict,  unfoldType, label, epBin, centBin)
-            
-            outputFile.cd()
-            for key in hUnfoldedDistDictBayes.values():
-                lOMainTree[epBin][centBin][0].Add(key)
-            for key in hRMDict.values():
-                lOMainTree[epBin][centBin][1].Add(key)
-            for key in jetSpectDict.values():
-                lOMainTree[epBin][centBin][2].Add(key)
-            for key in responsDict.values():
-                lOMainTree[epBin][centBin][3].Add(key)
-                # print(key)
-            inputFile.cd()
+                jetSpectDict = getJetSpectrums(mainTree[epBin][centBin], hRMDict, \
+                    ptRangeDict, ptBinArrayDict, scalePraDict, centBin, label)
+                
+                responsDict = getResponce(mainTree[epBin][centBin], hRMDict, jetSpectDict, label)
+                
+                label =  lEPLabel[epBin]+'/Cent'+str(centBin)+'/'
+                hKinEff = UnfoldPlots.plotKinematicEfficiency(hRMDict['main'], hRMDict['uncut'], \
+                    jetSpectDict, ptRangeDict, ptBinArrayDict, label, oPerformanceDir)
+                lOMainTree[epBin][centBin].Add(hKinEff)
 
-    UnfoldPlots.plotRMRatio(lOMainTree, numOfCentBin)
+                unfoldType = 'Bayes'
+                hUnfoldedDistDictBayes = UnfoldJetSpectrum(hRMDict, responsDict, jetSpectDict, hKinEff,\
+                    ptRangeDict, ptBinArrayDict, unfoldType, label, epBin, centBin)
+                unfoldType = 'SVD'
+                # hUnfoldedDistDictSVD = UnfoldJetSpectrum(hRMDict, responsDict, jetSpectDict, hKinEff, \
+                #     ptRangeDict, ptBinArrayDict, unfoldType, label, epBin, centBin)
+                
+                outputFile.cd()
+                for key in hUnfoldedDistDictBayes.values():
+                    lOMainTree[epBin][centBin][0].Add(key)
+                # for key in hUnfoldedDistDictSVD.values():
+                #     lOMainTree[epBin][centBin][0].Add(key)
+                for key in hRMDict.values():
+                    lOMainTree[epBin][centBin][1].Add(key)
+                for key in jetSpectDict.values():
+                    lOMainTree[epBin][centBin][2].Add(key)
+                for key in responsDict.values():
+                    lOMainTree[epBin][centBin][3].Add(key)
+                    # print(key)
+                inputFile.cd()
 
-    inputFile.cd()
+        UnfoldPlots.plotRMRatio(lOMainTree, numOfCentBin)
 
-    outputFile.cd()
-    lOMainTree.Write('mainTree', 1)
-    outputFile.Close()
+        inputFile.cd()
 
-    print('root ' + outputDir)
+        outputFile.cd()
+        lOMainTree.Write('mainTree', 1)
+        outputFile.Close()
+
+        print('root ' + outputDir)
 ### Main END  ##################################################################
 
 
@@ -629,12 +635,13 @@ def UnfoldJetSpectrum(hRMDict, responsDict, jetSpectDict, hKinEff, \
         hRFJet = responsDict['main'].ApplyToTruth(lHUFJetKDevForReFold)
         hRFJet.Scale(1., "width")
         lHRFJetKDev.append(hRFJet)
-        if ("SVD" in unfoldType) and (i == 1): 
-            UnfoldPlots.svdDVectorPlot(unfold, regPara, label)
-
+        
         # == s == Plots Unfolding QA figures 111111111111111111111111111111111111111
         label =  lEPLabel[epBin]+'/Cent'+str(centBin)+'/'+ unfoldType+'/Iteration'+str(i)+'/'
-
+        if ("SVD" in unfoldType): UnfoldPlots.svdDVectorPlot(unfold, i, label)
+        # if ("SVD" in unfoldType) and (i == regPara): 
+            # UnfoldPlots.svdDVectorPlot(unfold, regPara, label)
+        
         # Apply RM to unfolded result
         # UnfoldPlots.plotKinematicEfficiency(hRMDict['main'], hRMDict['uncut'], jetSpectDict, \
         #         ptRangeDict, ptBinArrayDict['mcGen'], label,oPerformanceDir)
@@ -736,8 +743,8 @@ def UnfoldSpectrum1D(respons, jetSpect, iteNum, unfoldType, label):
     # Loop over values of regularization parameter
     # Bayes: number of iterations
     # SVD: k
-    #errorType = RooUnfold.kErrors     #default in RooUnfold
-    #errorType = RooUnfold.kCovariance #used for preliminary
+    # errorType = RooUnfold.kErrors     #default in RooUnfold
+    # errorType = RooUnfold.kCovariance #used for preliminary
     # errorType = RooUnfold.kCovToy     
     #recomended by Leticia, see hadron jet note 
     # https://alice-notes.web.cern.ch/system/files/notes/analysis/251/2017-Aug-11-analysis_note-HadronJet_analysis_note.pdf Section 5
@@ -749,9 +756,10 @@ def UnfoldSpectrum1D(respons, jetSpect, iteNum, unfoldType, label):
         #unfold.SetNToys(1000)
     if "SVD" in unfoldType:
         unfold = RooUnfoldSvd(respons, jetSpect, iteNum)
-        # unfold.SetNToys(1000)
-        unfold.SetNToys(10)
-    
+        unfold.SetNToys(1000)
+        # unfold.SetNToys(10)
+        
+        
     # Perform the unfolding
     # Produces the truth distribution, with errors, 
     # PerBin (will scale by bin width below, after refolding checks)
@@ -864,6 +872,7 @@ def applyKinEff(hUFJet, hKinEff):
         kinEffBin = hKinEff.FindBin(xPtVal)
         kinEffVal = hKinEff.GetBinContent(kinEffBin)
         ufYVal = hUFJet.GetBinContent(ptBin)
+        corrUFYVal = ufYVal
         corrUFYVal = ufYVal*kinEffVal
         # corrUFYVal = ufYVal/kinEffVal
         

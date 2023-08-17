@@ -3,19 +3,19 @@
 # diffSys = "Norm", 'TrackEff094', 'BKGNoFit', 'BKGV2', 'V0M' 'V0C', 'V0A'
 # source runHaddScaleFiles.sh 'LHC18r' 5  diffSys
 
-# for i in `seq 0 4`; do
-#     echo $i $1 $2 $3
-#     python MergeScalePtHardPlots.py $i $1 $2 $3
-# done
-
-g++ cMergeScalePtHardPlots.C -o Run `root-config --cflags --libs`
 for i in `seq 0 4`; do
-    ./Run $i $1 $2 $3
+    echo $i $1 $2 $3
+    python MergeScalePtHardPlots.py $i $1 $2 $3
 done
+
+# g++ cMergeScalePtHardPlots.C -o Run `root-config --cflags --libs`
+# for i in `seq 0 4`; do
+#     ./Run $i $1 $2 $3
+# done
 
 python HAddOutputScaledFiles.py $1 $2 $3
 
-rm -rf ~/ALICE/cernbox/SWAN_projects/outputFiles/$1/pass3/Ch/Embedding/EmbedPtHardScaledResults_TrackPtCut5_*_Cent*
+# rm -rf ~/ALICE/cernbox/SWAN_projects/outputFiles/$1/pass3/Ch/Embedding/EmbedPtHardScaledResults_TrackPtCut5_*_Cent*
 
 echo root ~/ALICE/cernbox/SWAN_projects/outputFiles/$1/pass3/Ch/Embedding/
 

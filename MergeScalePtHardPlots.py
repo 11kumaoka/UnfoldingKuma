@@ -76,7 +76,8 @@ def MergeScalePtHardPlots(centKind, LHCPeriod, leadingTrackPtCut,  diffSys):
 # def main(centKind, LHCPeriod, leadingTrackPtCut, diffSys):
     
     inRawJetFile = '~/ALICE/cernbox/SWAN_projects/outputFiles/'+LHCPeriod+'/pass3/Ch/RawJet/'
-    if (diffSys != 'V0C') and (diffSys != 'V0A'): inRawJetFile += 'TrainAnaResTreeBKGWay.root'
+    if (diffSys != 'V0C') and (diffSys != 'V0A') and (diffSys != 'BKGV2'): inRawJetFile += 'TrainAnaResTreeBKGWay.root'
+    if (diffSys == 'BKGV2'): inRawJetFile += 'TrainAnaResTreeBKGWayV2.root'
     else:  inRawJetFile += 'TrainAnaResTreeBKGWayDiffV0.root'
 
     # inEmbFileDir = "./"
@@ -89,7 +90,7 @@ def MergeScalePtHardPlots(centKind, LHCPeriod, leadingTrackPtCut,  diffSys):
     outEmbFileDir = '~/ALICE/cernbox/SWAN_projects/outputFiles/'+LHCPeriod+'/pass3/Ch/Embedding/'
 
     outEmbFile = outEmbFileDir + 'EmbedPtHardScaledResults'\
-        +'_TrackPtCut'+str(leadingTrackPtCut)+'_'+diffSys+'_CentBin'+str(centKind)+'_Ver1.root'
+        +'_TrackPtCut'+str(leadingTrackPtCut)+'_'+diffSys+'_CentBin'+str(centKind)+'.root'
     # outEmbFile = outEmbFileDir + 'hoge.root'
 
     embHelperTaskName = "AliAnalysisTaskEmcalEmbeddingHelper_histos"

@@ -432,6 +432,12 @@ def GetSysUncErrObj(lAllValWithErr, dTargedObs, valKindBin, pTBinArray, centBin,
         dhAbsSysUnc['trackEff'], dlAbsSysUncErr['trackEff'] = AbsSysUncErrCalc1(dTargedObs['Nominal'], \
             dTargedObs['trackEff94'], 'trackEff', 4, pTBinArray, centBin)
         
+        # dhAbsSysUnc['bkgWay'], dlAbsSysUncErr['bkgWay'] \
+        #     = AbsSysUncErrCalc1(dTargedObs['Nominal'], dTargedObs['BKGV2'],\
+        #         'bkgWay', 5, pTBinArray,centBin)
+        # dhAbsSysUnc['bkgWay'], dlAbsSysUncErr['bkgWay'] \
+        #     = AbsSysUncErrCalc1(dTargedObs['Nominal'], dTargedObs['BKGNoFit'],\
+        #         'bkgWay', 5, pTBinArray,centBin)
         dhAbsSysUnc['bkgWay'], dlAbsSysUncErr['bkgWay'] \
             = AbsSysUncErrCalc2(dTargedObs['Nominal'], dTargedObs['BKGNoFit'], dTargedObs['BKGV2'],\
                 'bkgWay', 5, pTBinArray,centBin)
@@ -640,7 +646,7 @@ def AbsSysUncErrCalcTempRaw(hNominal, lTemRawSysErr, diffName, diffNum, pTBinArr
 
     return hSysUncPer, lSysUncErr
 
-
+ 
 def RelativeSysUncErrCalc1(hNominal, hDiff, diffName, diffNum, pTBinArray ,centBin):
     histName = "hNominalRelativeCP_" + diffName + '_Cent'+ str(centBin)
     hNominalCP = hNominal.Clone(histName)
@@ -1411,7 +1417,7 @@ def CompareWithAnotherSemiCentral(lAllCentChJetV2Val):
         hChJetV2ATLAS5TeV.SetBinError(ptBin+1, statErrATLAS5TeV[ptBin])
 
     color = 632+2
-    sysErrATLAS5TeV = ROOT.TGraphErrors(7, ptBinATLAS5TeV, ChJetV2ATLAS5TeV, binWidthATLAS5TeV, shapeSysErrATLAS5TeV)
+    sysErrATLAS5TeV = ROOT.TGraphErrors(9, ptBinATLAS5TeV, ChJetV2ATLAS5TeV, binWidthATLAS5TeV, shapeSysErrATLAS5TeV)
     genePlotSets.setHistLooksWSysE(hChJetV2ATLAS5TeV, sysErrATLAS5TeV, 20, color, 0)
     # == e == prepare paper figure (5.02 TeV ATLAS Pb-Pb)  =================
     
@@ -1504,16 +1510,19 @@ def V2SysErrorPropergate(hV2, hOEPUFJet, hIEPUFJet, lRelaSysUncErrOEP, lRelaSysU
             DenoErr = (IEPUFJetContent+OEPUFJetContent)*(IEPUFJetContent+OEPUFJetContent)\
                 *(IEPUFJetContent+OEPUFJetContent)*(IEPUFJetContent+OEPUFJetContent)
             ONumeErr = 4*(OEPUFJetContent*OEPUFJetContent)*(IEPUFJetErr*IEPUFJetErr)
-            INumeErr = 4*(IEPUFJetContent*IEPUFJetContent)*(OEPUFJetErr*OEPUFJetErr) 
-            # CoEffError =  TMath.Pi() / (4 * lPsi2Reso[centBin])
-            multErr = np.sqrt(ONumeErr/DenoErr + INumeErr/DenoErr)
+            INumeErr = 4*(IEPUFJetContent*IEPUFJetContent)*(OEPUFJetErr*OEPUFJetErr)
 
-            ratio = multErr/hV2.GetBinContent(iBin)
+            SecondTerm = 8*(OEPUFJetContent*IEPUFJetContent)*IEPUFJetErr*OEPUFJetErr*(3/4)
+            # CoEffError =  TMath.Pi() / (4 * lPsi2Reso[centBin])
+            multErr = np.sqrt(ONumeErr/DenoErr + INumeErr/DenoErr - SecondTerm/DenoErr)
+
+            # ratio = multErr/hV2.GetBinContent(iBin)
+            ratio = multErr
             hSysUncPer.Fill(fillVal, ratio)
             # hSysUncPer.Fill(fillVal, multErr)
             # SysUncErr = np.sqrt(deltaVal*deltaVal)
+            # SysUncErr = multErr/hV2.GetBinContent(iBin)
             SysUncErr = multErr*hV2.GetBinContent(iBin)
-            # SysUncErr = multErr
             lSysUncErr.append(SysUncErr)
 
             errBin+=1

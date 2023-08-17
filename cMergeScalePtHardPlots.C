@@ -69,11 +69,7 @@ Double_t maxPtDet = 150.;
 // 6.760726612338514e-12, 2.3879130596397466e-12, 1.140758647139845e-12, 5.295523483080566e-13, \
 // 2.593055941557842e-13, 2.569815638073137e-13, 7.278621817851156e-14, 1.4427633953104294e-14, \
 // 4.122334085737104e-14, 1.1094286846225388e-13};
-Double_t lrefPtHardScalFactor[20] = {2.446091855262593e-07, 7.314975239763274e-08, 3.362231880594244e-08, 1.1895882634924634e-08, 4.040376437588744e-09, 8.080455194155069e-09, 4.750910913607525e-10, 1.566097040702298e-10, 3.4940423913705284e-10, 2.118136932704947e-11, 8.003818748583827e-12, 2.8357605981006887e-12, 1.3703850028545194e-12, 6.368826505468165e-13, 3.1137657459266875e-13, 2.221801809420425e-13, 8.647496708263527e-14, 2.7811870500499066e-14, 3.492944863521209e-14, 6.539761692063409e-14};
-Double_t lrefPtHardNumOfEvent[20] = {312928000.0, 302957600.0, 305855072.0, 314695552.0, \
-313266752.0, 64047516.0, 295197280.0, 301729440.0, 61050888.0, 305772608.0, 316792384.0, \
-317848256.0, 321308448.0, 321551360.0, 321028320.0, 234297216.0, 317694624.0, 515075424.0, \
-232038608.0, 162168640.0};
+
 
 //LHC18r
 // Double_t lScaleFactor[20] = \
@@ -95,9 +91,13 @@ Double_t lrefPtHardNumOfEvent[20] = {312928000.0, 302957600.0, 305855072.0, 3146
 //                 275080032.0, 104309320.0};
 
 
+Double_t lScaleFactor[20] = {};
+Double_t lPtHardEventNum[20] = {};
+
 Double_t ptHardL[20] = {5, 7, 9, 12, 16, 21, 28, 36, 45, 57, 70, 85, 99, 115, 132, 150, 169, 190, 212, 235};
 Double_t ptHardH[20] = {7, 9, 12, 16, 21, 28, 36, 45, 57, 70, 85, 99, 115, 132, 150, 169, 190, 212, 235, -1};
 
+void SetScaleFactor(Double_t* lScaleFactor, Double_t* lPtHardEventNum, TString LHCPeriod, TString diffSys);
 Int_t GetNEvents(TString inEmbFileBaseName, TString taskName, Int_t bin, TH1D *hNEvents, Bool_t bAccEvents);
 // Int_t GetNEvents(TString inEmbFileBaseName, TString taskName, Int_t bin, Bool_t bAccEvents);
 void eachPtHardBinScaleFact(TString inEmbFileBaseName, TString taskName, Int_t PtHardBins, \
@@ -132,9 +132,10 @@ void histLabelSetting(TProfile *outputHist, TString histTitle,TString xTitle,TSt
 // TString inRawJetFile = "~/ALICE/cernbox/SWAN_projects/outputFiles/LHC18r/pass3/Ch/RawJet/TrainAnaResTreeBKGWay.root";
 // TString inEmbFileDir = "./";
 // TString inEmbFileDir = "/Volumes/KumaSSD/TrainOutput/LHC18q/Embedding/8870/";
-TString inEmbFileDir = "~/ALICE/cernbox/SWAN_projects/outputFiles/LHC18r/pass3/Ch/Embedding/Train/8870/";
 
-TString inEmbFileBaseName = inEmbFileDir + "AnalysisResultsPtHard";
+TString inEmbFileDir = "~/ALICE/cernbox/SWAN_projects/outputFiles/LHC18r/pass3/Ch/Embedding/Train/";
+
+TString inEmbFileBaseName = "";
 // TString outEmbFileDir = "./";
 TString outEmbFileDir = "~/ALICE/cernbox/SWAN_projects/outputFiles/LHC18r/pass3/Ch/Embedding/";
 
@@ -153,6 +154,11 @@ int main(int argc, char *argv[]){
     if((diffSys != "V0M") && (diffSys != "V0C") && (diffSys != "V0A")) {
         inRawJetFile += "TrainAnaResTreeBKGWay.root";
     }else  inRawJetFile += "TrainAnaResTreeBKGWayDiffV0.root";
+    
+    if((diffSys != "V0M") && (diffSys != "V0C") && (diffSys != "V0A")) {
+        inEmbFileDir += "8870/";
+    }else inEmbFileDir += "8922/";
+    inEmbFileBaseName = inEmbFileDir + "AnalysisResultsPtHard";
 
     TString outEmbFile = TString::Format("%sEmbedPtHardScaledResults_TrackPtCut%d_%s_CentBin%d.root"\
         , outEmbFileDir.Data(), leadingTrackPtCut, diffSys.Data(), mCentBin);
@@ -198,10 +204,11 @@ int main(int argc, char *argv[]){
             lScaleFactor, lPtHardEventNum, lMainTree);
     
     ExtractDataRawJet(inRawJetFile, leadingTrackPtCut, diffSys, mCentBin, lMainTree);
-
+    
+    SetScaleFactor(lScaleFactor, lPtHardEventNum, LHCPeriod, diffSys);
     std::cout << "lScaleFactor = [" << "\n";
-    for (int i = 0; i < 20; i++) std::cout << lrefPtHardScalFactor[i] << ", " << "\n"; 
-    ScaleJetHists(lMainTree, lrefPtHardScalFactor, PtHardBins, inEmbFileBaseName, jetTaskName);
+    for (int i = 0; i < 20; i++) std::cout << lScaleFactor[i] << ", " << "\n"; 
+    ScaleJetHists(lMainTree, lScaleFactor, PtHardBins, inEmbFileBaseName, jetTaskName);
     
     outRootFile->cd();
     lMainTree->Write("mainTree", 1);
@@ -451,7 +458,7 @@ void eachPtHardBinScaleFact(TString inEmbFileBaseName, TString taskName, Int_t P
         hNTrialsPerEvent->Fill(bin-0.5, trials);
         
         // hScaleFactor->Fill(bin-0.5, eventScaleFactorAcc*scaleFactor);
-        hScaleFactor->Fill(bin-0.5, lrefPtHardScalFactor[bin-1]);//?????????????????????
+        hScaleFactor->Fill(bin-0.5, lScaleFactor[bin-1]);//?????????????????????
 
         std::cout << TString::Format("xSec: %f, trials: %f, histVal:  %f, nEventsTot: %d, nEventsTot: %d, eventScalFactor: %f, scaleFactor: %f"\
             ,xsec, trials, hTrialsPtHard->GetBinContent(1), nEventsTot, nEventsAcc, eventScaleFactorAcc, scaleFactor) << std::endl;
@@ -1172,6 +1179,85 @@ void histLabelSetting(TProfile *outputHist, TString histTitle, TString xTitle, T
     outputHist->SetLineWidth(5);
 
     outputHist->Rebin(Rebin);
+}
+
+
+void SetScaleFactor(Double_t* lScaleFactor, Double_t* lPtHardEventNum, TString LHCPeriod, TString diffSys){
+
+    Double_t lrefPtHardScalFactorLHC18q[20] = {9.177734972060997e-08, \
+        2.8349028721358537e-08, 1.2906816933214331e-08, 4.438265121771655e-09, \
+        1.5143096874822496e-09, 1.481292114033884e-08, 1.8896079634207416e-10, \
+        6.094080087747223e-11, 6.719599044722054e-10, 8.133222071600738e-12, \
+        2.9663998343658287e-12, 1.0475069333113453e-12, 5.007576907062431e-13, \
+        2.325499458678617e-13, 1.1388060504181516e-13, 1.1133849925716706e-13, \
+        3.1958597696234174e-14, 6.339668437202558e-15, 1.7674154782042322e-14, \
+        4.734806373943197e-14};
+    Double_t lrefPtHardNumOfEventLHC18q[20] = {130929720.0, 126156976.0, \
+        127772880.0, 131483728.0, 130965840.0, 25415294.0, 123289592.0, 126142400.0, \
+        24295196.0, 127763496.0, 132379808.0, 132791088.0, 134328048.0, 134483312.0, \
+        134274000.0,96676568.0, 132849256.0, 215552448.0, 94747208.0, 65914416.0};
+
+    Double_t lrefPtHardScalFactorLHC18r[20] = {1.0311858837350005e-07, \
+        3.1965864804665285e-08, 1.3544813757767156e-08, 4.960101754275058e-09, \
+        1.7000300954266733e-09, 6.850195617723509e-10, 1.9551046046071345e-10, \
+        6.767757025526565e-11, 2.6830176915083785e-11, 9.551208018080331e-12, \
+        3.415149269564962e-12, 1.22434827333091e-12, 6.227175402055881e-13, \
+        3.053814558072003e-13, 1.4631121940665949e-13, 4.824270054036721e-13, \
+        3.8743223134692397e-14, 1.9262639859449602e-14, 1.2205335164987764e-14, \
+        1.076972637929458e-13};
+    Double_t lrefPtHardNumOfEventLHC18r[20] = {119152816.0, 114575400.0, 120281920.0, \
+        119913736.0, 119175216.0, 113954416.0, 116901768.0, 115446128.0, 117300200.0, \
+        113688128.0, 119033856.0, 118434224.0, 116181552.0, 113190656.0, 114248560.0, \
+        44793380.0, 116328024.0, 119243576.0, 109950448.0, 42151224.0};
+
+    // == s == V0 root file ==
+    Double_t lrefPtHardScalFactorLHC18qV0[20] = {1.0321989824871018e-07, 2.93822098900898e-08,\
+        1.4154134786746665e-08, 5.193423001593628e-09, 1.7056757467304182e-09, \
+        6.225948475912749e-10, 1.845875082499011e-10, 6.201911334052037e-11, \
+        2.5421819691359822e-11, 8.421122396813474e-12, 3.2963503770197606e-12, \
+        1.165303758790266e-12, 5.759455256796066e-13, 2.7035640908113497e-13, \
+        1.3222542894576327e-13, 4.830849232450998e-14, 3.690801210396656e-14, \
+        1.940868489423863e-14, 1.0371460954031887e-14, 1.7789622079360143e-14};
+    Double_t lrefPtHardNumOfEventLHC18qV0[20] = {130869888.0, 131426952.0, 129399008.0, \
+        128898584.0, 130849480.0, 131401312.0, 132276952.0, 132600872.0, 132539584.0, \
+        133147424.0, 133166312.0, 133498968.0, 132816752.0, 132287688.0, 132129824.0, \
+        155653296.0, 131128264.0, 130593248.0, 131126784.0, 114060416.0};
+
+    Double_t lrefPtHardScalFactorLHC18rV0[20] = {1.0854657739954753e-07, \
+        3.125689558557477e-08, 1.4795268318798147e-08, 5.361323264319431e-09, \
+        1.820748781478633e-09, 6.573623469384724e-10, 1.9574099151899413e-10, \
+        6.716684207816774e-11, 2.7645351065349576e-11, 9.16027296183672e-12, \
+        3.5620883973149024e-12, 1.2764713296291094e-12, 6.216401942811304e-13, \
+        4.763351619556121e-13, 1.417433574153358e-13, 1.199755862199768e-13, \
+        3.906567932266237e-14, 1.9893576310816953e-14, 1.0690590074901366e-14, \
+        1.3872420490884595e-14};
+    Double_t lrefPtHardNumOfEventLHC18rV0[20] = {120807904.0, 120575528.0, 119736904.0,\
+        120069312.0, 119875776.0, 121040976.0, 121558056.0, 120573872.0, 120247048.0, \
+        120768424.0, 121215752.0, 120690928.0, 120959304.0, 94321376.0, 120782072.0, \
+        93542600.0, 120635328.0, 122086672.0, 122201992.0, 122211872.0};
+    // == e == V0 root file ==
+
+
+    for(Int_t ptHardBin=0; ptHardBin<20; ptHardBin++){
+        if(LHCPeriod=="LHC18q"){
+            if((diffSys != "V0M") && (diffSys != "V0C") && (diffSys != "V0A")) {
+                lScaleFactor[ptHardBin] = lrefPtHardScalFactorLHC18q[ptHardBin];
+                lPtHardEventNum[ptHardBin] = lrefPtHardNumOfEventLHC18q[ptHardBin];
+            }else {
+                lScaleFactor[ptHardBin] = lrefPtHardScalFactorLHC18qV0[ptHardBin];
+                lPtHardEventNum[ptHardBin] = lrefPtHardNumOfEventLHC18qV0[ptHardBin];
+            }
+        }else if(LHCPeriod=="LHC18r"){
+            if((diffSys != "V0M") && (diffSys != "V0C") && (diffSys != "V0A")) {
+                lScaleFactor[ptHardBin] = lrefPtHardScalFactorLHC18r[ptHardBin];
+                lPtHardEventNum[ptHardBin] = lrefPtHardNumOfEventLHC18r[ptHardBin];
+            }else {
+                lScaleFactor[ptHardBin] = lrefPtHardScalFactorLHC18rV0[ptHardBin];
+                lPtHardEventNum[ptHardBin] = lrefPtHardNumOfEventLHC18rV0[ptHardBin];
+            }
+        }
+
+    }
 }
 
 // ################################################################################
