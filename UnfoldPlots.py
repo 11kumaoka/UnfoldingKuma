@@ -39,7 +39,6 @@ fileFormat = '.root'
 # Returns RooUnfoldResponse object.                     ##
 ################################################################################
 def plotHistBeforUnfold(responsDict, jetSpectDict, label, outputDir):
-
     # Set up the RooUnfoldResponse object
     # One can supply the measured and truth distributions is to incorporate fakes and inefficiency
     # For the truth-level, we pass in the projection 
@@ -332,7 +331,7 @@ def plotFoldedTest(response, hJetSpectrumUnfoldedPerGeV, hJetSpectrumMeasuredPer
     # (unfolded spectrum is also PerBin at the moment, despite its name)
     hFoldedTruthPerGeV = response.ApplyToTruth(hJetSpectrumUnfoldedPerGeV) 
     hFoldedTruthPerGeV.Scale(1., "width") # Divide by bin width to create per GeV spectrum
-    hFoldedTruthPerGeV.Scale(9.) # tuning ??????????????????????????????????????
+    hFoldedTruthPerGeV.Scale(9.) # tuning ???????????????????????????????????
 
     # nBins = len(ptDetBinArray) - 1
     # hFoldedTruthPerGeV = hFoldedTruthPerGeV.Rebin(nBins, histName, ptDetBinArray)
@@ -509,12 +508,11 @@ def plotUnfoldedKDevelopedSpectra(FoldType, lhUnfKDevelop, regPara, ptRangeDict,
     hMainResult.GetYaxis().SetRangeUser(2e-10,2e-3)
     hMainResult.GetYaxis().SetLabelFont(43)
     hMainResult.GetYaxis().SetLabelSize(20)
-    #hMainResult.GetXaxis().SetTitle("")
     hMainResult.Draw("hist E")
 
     TitleName = ''
-    if FoldType == 0: TitleName = '{} Unfolding'.format(type)
-    elif FoldType == 1: TitleName = '{} Refolding'.format(type)
+    if FoldType == 0: TitleName = 'Unfolding'
+    elif FoldType == 1: TitleName = 'Refolding'
     leg2 = ROOT.TLegend(0.7,0.6,0.88,0.93,TitleName)
     leg2.SetFillColor(10)
     leg2.SetBorderSize(0)
@@ -572,6 +570,7 @@ def plotUnfoldedKDevelopedSpectra(FoldType, lhUnfKDevelop, regPara, ptRangeDict,
         tempHUnfKDevelop = lhUnfKDevelop[kDevLoop].Clone(histName)
         if kDevLoop == regPara-1: tempHUnfKDevelop.SetLineColor(1)
         else :tempHUnfKDevelop.SetLineColor(lColor[kDevLoop])
+        
         tempHUnfKDevelop.Divide(hMainResult)
         tempHUnfKDevelop.DrawCopy("same P E")
 
@@ -581,6 +580,146 @@ def plotUnfoldedKDevelopedSpectra(FoldType, lhUnfKDevelop, regPara, ptRangeDict,
     fileName = ''
     if FoldType == 0: fileName = 'hJetSpectraUnfoldedRatioAll'
     elif FoldType == 1: fileName = 'hJetSpectraRefoldedRatioAll'
+    outputFilename = os.path.join(outputRatioDir, fileName + fileFormat)
+    cAll.SaveAs(outputFilename)
+    cAll.Close()
+    ##------
+
+
+################################################################################
+# Plot unfolded k developed result                                        　　###
+################################################################################
+def plotRefoldRawRatios(hJetSpectrumMeasuredPerGeV, lhUnfKDevelop, regPara, ptRangeDict,\
+    ptBinArrayDict, label,lColor, outputDir):
+    histName = hJetSpectrumMeasuredPerGeV.GetName() + '_ForReFoldRatioQA'
+    hJetSpectrumMeasuredPerGeVCP = hJetSpectrumMeasuredPerGeV.Clone()
+    hJetSpectrumMeasuredPerGeVCP.Rebin(len(ptBinArrayDict['reported'])-1, histName, ptBinArrayDict['reported'])
+
+    cAll = ROOT.TCanvas("cAll","cAll: pT",800,850)
+    cAll.cd()
+    pad1 = ROOT.TPad("pad1", "pad1", 0, 0.55, 1, 1.0)
+    pad1.SetBottomMargin(0)
+    pad1.SetLeftMargin(0.15)
+    pad1.SetRightMargin(0.05)
+    pad1.SetTopMargin(0.05)
+    pad1.SetLogy()
+    pad1.Draw()
+    pad1.cd()
+    
+    hMainResult = lhUnfKDevelop[regPara-1].Clone('hNominal_kIteration'+str(regPara))
+    hMainResult.SetLineColor(1)
+    hMainResult.SetLineWidth(2)
+    hMainResult.SetLineStyle(1)
+    hMainResult.GetYaxis().SetTitle("counts")
+    hMainResult.GetYaxis().SetTitleSize(0.06)
+    hMainResult.Rebin(len(ptBinArrayDict['reported'])-1, 'hNominal_kIteration'+str(regPara), ptBinArrayDict['reported'])
+    hMainResult.GetYaxis().SetRangeUser(2e-10,2e-3)
+    hMainResult.GetYaxis().SetLabelFont(43)
+    hMainResult.GetYaxis().SetLabelSize(20)
+    hMainResult.Draw("hist E")
+    hMainResult.SaveAs('hNominal_kIteration'+str(regPara)+'.root')
+    
+    TitleName = 'Refolding'
+    leg2 = ROOT.TLegend(0.7,0.6,0.88,0.93,TitleName)
+    leg2.SetFillColor(10)
+    leg2.SetBorderSize(0)
+    leg2.SetFillStyle(0)
+    leg2.SetTextSize(0.04)
+
+    for kDevLoop in range(0, len(lhUnfKDevelop)):
+        hUnfKDevelop = lhUnfKDevelop[kDevLoop]
+        if kDevLoop == regPara-1: hUnfKDevelop.SetLineColor(1)
+        else :hUnfKDevelop.SetLineColor(lColor[kDevLoop])
+        hUnfKDevelop.SetLineWidth(3)
+        hUnfKDevelop.DrawCopy("hist same E")
+        leg2.AddEntry(hUnfKDevelop, "k={}".format(kDevLoop+1), "l")
+
+    leg2.Draw("same")
+
+    #- - - - - - - -
+    cAll.cd()
+    pad2 = ROOT.TPad("pad2", "pad2", 0, 0.05, 1, 0.55)
+    pad2.SetTopMargin(0)
+    pad2.SetBottomMargin(0.35)
+    pad2.SetLeftMargin(0.15)
+    pad2.SetRightMargin(0.05)
+    pad2.Draw()
+    pad2.cd()
+
+    histName = ''
+    histName = 'hRefoldedVsRaw_k'+str(regPara)
+    hUnfKDeveRatio = lhUnfKDevelop[0].Clone(histName)
+    hUnfKDeveRatio.Divide(hJetSpectrumMeasuredPerGeVCP)
+    hUnfKDeveRatio.GetYaxis().SetLabelSize(0.05)
+    hUnfKDeveRatio.GetXaxis().SetLabelSize(0.05)
+    hUnfKDeveRatio.GetYaxis().SetTitleOffset(1.2)
+    hUnfKDeveRatio.GetXaxis().SetTitleOffset(1.2)
+    hUnfKDeveRatio.GetYaxis().SetTitleSize(0.05)
+    hUnfKDeveRatio.GetXaxis().SetTitleSize(0.05)
+    hUnfKDeveRatio.GetYaxis().SetTitle("Refold/Raw".format(regPara))
+    hUnfKDeveRatio.GetXaxis().SetTitle("#it{p}_{T,jet} (GeV/#it{c})")
+    hUnfKDeveRatio.GetYaxis().SetNdivisions(505)
+    hUnfKDeveRatio.Rebin(len(ptBinArrayDict['reported'])-1,histName, ptBinArrayDict['reported'])
+    hUnfKDeveRatio.GetYaxis().SetRangeUser(0.85, 1.15)
+
+    hUnfKDeveRatio.SetLineColor(lColor[0])
+    hUnfKDeveRatio.Draw()
+    hUnfKDeveRatio.DrawCopy("P E")
+
+    histname = 'hRawErrorRatio'
+    title = histname
+    ptNBins = hUnfKDeveRatio.GetXaxis().GetNbins()
+    # ptNBins = len(ptBinArrayDict['reported']) - 1
+    ptBinArray = ptBinArrayDict['reported']
+    ptBinCArray = list()
+    xWidthCArray = list()
+    yValCArray = list()
+    yErrCArray = list()
+
+    for ptBin in range(0, ptNBins):
+        ptValL = hUnfKDeveRatio.GetXaxis().GetBinLowEdge(ptBin+1)
+        ptValH = hUnfKDeveRatio.GetXaxis().GetBinUpEdge(ptBin+1)
+        ptValC = hUnfKDeveRatio.GetXaxis().GetBinCenter(ptBin+1)
+        ptWidth = hUnfKDeveRatio.GetXaxis().GetBinWidth(ptBin+1)/2
+        ptBinCArray.append(ptValC)
+        xWidthCArray.append(ptWidth)
+        yValCArray.append(1.)
+        
+        tempVal = hUnfKDeveRatio.GetBinContent(ptBin+1)
+        tempErr = hUnfKDeveRatio.GetBinError(ptBin+1)
+        if tempVal == 0: tempVal = 1
+        errValRatio = tempErr/tempVal
+        yErrCArray.append(errValRatio)
+    
+    ptBinCArray = array('d', ptBinCArray)
+    xWidthCArray = array('d', xWidthCArray)
+    yValCArray = array('d', yValCArray)
+    yErrCArray = array('d', yErrCArray)
+    hRawErrorRatio = ROOT.TGraphErrors(ptNBins, ptBinCArray, yValCArray, xWidthCArray, yErrCArray)
+    hRawErrorRatio.SetMarkerColor(1)
+    hRawErrorRatio.SetLineColor(1)
+    hRawErrorRatio.SetLineWidth(0)
+    hRawErrorRatio.SetFillStyle(3001)
+    hRawErrorRatio.SetFillColorAlpha(1, 0.3)
+    hRawErrorRatio.SetFillColor(1)
+    hRawErrorRatio.SetMarkerSize(0.)
+    hRawErrorRatio.SetMarkerStyle(0)
+    
+    hKDevUfJetList = list()
+    for kDevLoop in range(0, len(lhUnfKDevelop)):
+        histName = 'hRefoldedSpectraRatio_k'+str(kDevLoop+1) +'/k='+str(regPara)
+        tempHUnfKDevelop = lhUnfKDevelop[kDevLoop].Clone(histName)
+        if kDevLoop == regPara-1: tempHUnfKDevelop.SetLineColor(1)
+        else :tempHUnfKDevelop.SetLineColor(lColor[kDevLoop])
+        tempHUnfKDevelop.Divide(hJetSpectrumMeasuredPerGeVCP)
+        hKDevUfJetList.append(tempHUnfKDevelop)
+        tempHUnfKDevelop.DrawCopy("same P E")
+    
+    hRawErrorRatio.Draw('e 5 same')
+    
+    outputRatioDir = outputDir + '/'  + label + '/RatioPlot'
+    if not os.path.exists(outputRatioDir): os.makedirs(outputRatioDir)
+    fileName = 'hJetRefoldRawRatioAll'
     outputFilename = os.path.join(outputRatioDir, fileName + fileFormat)
     cAll.SaveAs(outputFilename)
     cAll.Close()

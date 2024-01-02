@@ -72,22 +72,44 @@ lrefPtHardNumOfEvent = [5883650.0, 6097914.0, 6526103.0, 6487913.0, 6542589.0, \
 
 ###################################################################################
 # Main function (0/1/2/3/4, "LHC18q/LHC18r", 0/5/7, "98%: ''/94%: 'TrackEff094'"
-def MergeScalePtHardPlots(centKind, LHCPeriod, leadingTrackPtCut,  diffSys):
+def MergeScalePtHardPlots(centKind, LHCPeriod, leadingTrackPtCut, diffSys, JetRLabel):
 # def main(centKind, LHCPeriod, leadingTrackPtCut, diffSys):
     
-    inRawJetFile = '~/ALICE/cernbox/SWAN_projects/outputFiles/'+LHCPeriod+'/pass3/Ch/RawJet/'
-    if (diffSys != 'V0C') and (diffSys != 'V0A') and (diffSys != 'BKGV2'): inRawJetFile += 'TrainAnaResTreeBKGWay.root'
-    if (diffSys == 'BKGV2'): inRawJetFile += 'TrainAnaResTreeBKGWayV2.root'
-    else:  inRawJetFile += 'TrainAnaResTreeBKGWayDiffV0.root'
+    inRawJetFile = ''
+    inEmbFileDir = ''
+    inEmbFileBaseName = ''
+    outEmbFileDir = ''
 
-    # inEmbFileDir = "./"
-    # inEmbFileDir = "/Volumes/KumaSSD/TrainOutput/+LHCPeriod+/Embedding/8870/"
-    # inEmbFileDir = '~/ALICE/cernbox/SWAN_projects/outputFiles/'+LHCPeriod+'/pass3/Ch/Embedding/Train/8870/'
-    inEmbFileDir = '~/ALICE/cernbox/SWAN_projects/outputFiles/'+LHCPeriod+'/pass3/Ch/Embedding/Train/8922/'
-
+    if(JetRLabel=='R02'):
+        allBaseFileDir = ''
+        if(LHCPeriod=='LHC18q') or (LHCPeriod=='LHC18r'): 
+            allBaseFileDir = '~/ALICE/cernbox/SWAN_projects/outputFiles/'
+            baseInRawJetFile = allBaseFileDir+LHCPeriod+'/pass3/Ch/RawJet/'
+            if (diffSys != 'V0C') and (diffSys != 'V0A') and (diffSys != 'BKGV2'): 
+                inRawJetFile = baseInRawJetFile + 'TrainAnaResTreeBKGWay.root'
+            elif (diffSys == 'BKGV2'): 
+                inRawJetFile = baseInRawJetFile +'TrainAnaResTreeBKGWayV2.root'
+            else:  inRawJetFile = baseInRawJetFile +'TrainAnaResTreeBKGWayDiffV0.root'
+            # inEmbFileDir = "./"
+            if (diffSys == 'TrackEff094'): 
+                inEmbFileDir = allBaseFileDir+LHCPeriod+'/pass3/Ch/Embedding/Train/8870/'
+            else: inEmbFileDir = allBaseFileDir+LHCPeriod+'/pass3/Ch/Embedding/Train/8922/'
+        else: 
+            allBaseFileDir = '/Volumes/KumaSSD/TrainOutput/'
+            baseInRawJetFile = allBaseFileDir+LHCPeriod+'/pass3/Ch/RawJet/'
+            inRawJetFile = baseInRawJetFile + 'TrainAnaResTree'+JetRLabel+'.root'
+            inEmbFileDir = allBaseFileDir+LHCPeriod+'/pass3/Ch/Embedding/8870/'
+    
+    else:
+        baseInRawJetFile = '/Volumes/KumaSSD/TrainOutput/'+LHCPeriod+'/pass3/Ch/RawJet/'
+        inRawJetFile = baseInRawJetFile + 'TrainAnaResTree'+JetRLabel+'.root'
+        
+        inEmbFileDir = '/Volumes/KumaSSD/TrainOutput/'+LHCPeriod+'/pass3/Ch/Embedding/'+JetRLabel+'/'
+        
     inEmbFileBaseName = inEmbFileDir + "AnalysisResultsPtHard"
+    
     # outEmbFileDir = './'
-    outEmbFileDir = '~/ALICE/cernbox/SWAN_projects/outputFiles/'+LHCPeriod+'/pass3/Ch/Embedding/'
+    outEmbFileDir = '~/ALICE/cernbox/SWAN_projects/outputFiles/'+LHCPeriod+'/pass3/Ch/Embedding/'+JetRLabel+'/'
 
     outEmbFile = outEmbFileDir + 'EmbedPtHardScaledResults'\
         +'_TrackPtCut'+str(leadingTrackPtCut)+'_'+diffSys+'_CentBin'+str(centKind)+'.root'
@@ -95,8 +117,10 @@ def MergeScalePtHardPlots(centKind, LHCPeriod, leadingTrackPtCut,  diffSys):
 
     embHelperTaskName = "AliAnalysisTaskEmcalEmbeddingHelper_histos"
     # jetTaskName = 'AliAnalysisTaskEmbeddingJetWithEP_1_new_histos'
-    jetTaskName = 'AliAnalysisTaskEmbeddingJetWithEP_R02PtCut' +str(leadingTrackPtCut)+ diffSys + '_histos'
-    
+    tempJetRLabel = JetRLabel
+    if JetRLabel == 'R021': tempJetRLabel = 'R02'
+    jetTaskName = 'AliAnalysisTaskEmbeddingJetWithEP_'+tempJetRLabel+'PtCut' +str(leadingTrackPtCut)+ diffSys + '_histos'
+    if(diffSys=='Norm'): jetTaskName = 'AliAnalysisTaskEmbeddingJetWithEP_'+tempJetRLabel+'PtCut' +str(leadingTrackPtCut)+ '_histos'
 
     # Create histogram of NEvents accepted and NEvents acc+rej, as a function of pT-hard bin
     hNEventsAcc = ROOT.TH1F("hNEventsAcc", "hNEventsAccepted", PtHardBins+1, iniPtHardBin-1, PtHardBins+1)
@@ -141,20 +165,20 @@ def MergeScalePtHardPlots(centKind, LHCPeriod, leadingTrackPtCut,  diffSys):
     lMainTree.Add(hPtHardSpectScaled)
 
     print('== s == ExtractDataRawJet ===========')
-    ExtractDataRawJet(inRawJetFile, leadingTrackPtCut, diffSys, centKind, lMainTree)
+    ExtractDataRawJet(inRawJetFile, leadingTrackPtCut, diffSys, JetRLabel, centKind, lMainTree)
     print('== s == ScaleJetHists ===========')
     ScaleJetHists(lMainTree, lScaleFactor, PtHardBins, centKind, inEmbFileBaseName, jetTaskName, leadingTrackPtCut, outEmbFileDir)
     
     print('== s == PlotPerformanceHistEachCent ===========')
     for epBin in range(0, 2):
-        PlotPerformanceHistEachCent(lMainTree[epBin], centKind, epBin)
+        PlotPerformanceHistEachCent(lMainTree[epBin], centKind, epBin, JetRLabel)
 
         for centBin in range(embCentBinRange[centKind][0], embCentBinRange[centKind][1]):
             label = 'Cent'+str(centBin)
             histName = 'hRM_forUnfold_' + 'Cent{0}'.format(centBin)
             hOriginRM = lMainTree[epBin][centBin].FindObject(histName)
 
-            EditRMForUF(lMainTree[epBin][centBin], hOriginRM, centBin, epBin, label)
+            EditRMForUF(lMainTree[epBin][centBin], hOriginRM, centBin, epBin, JetRLabel, label)
     
     # print(len(lMainTree))
     # for centBin in range(embCentBinRange[centKind][0], embCentBinRange[centKind][1]):
@@ -178,7 +202,7 @@ def MergeScalePtHardPlots(centKind, LHCPeriod, leadingTrackPtCut,  diffSys):
 
 
 ###################################################################################
-def ExtractDataRawJet(inRawJetFile, leadingTrackPtCut, diffSys, centKind, lMainTree):
+def ExtractDataRawJet(inRawJetFile, leadingTrackPtCut, diffSys, JetRLabel, centKind, lMainTree):
     print(diffSys)
     print(inRawJetFile)
     f = ROOT.TFile(inRawJetFile, "READ")
@@ -187,11 +211,13 @@ def ExtractDataRawJet(inRawJetFile, leadingTrackPtCut, diffSys, centKind, lMainT
     if (diffSys == 'V0C') or (diffSys == 'V0A'): diffSysName = diffSys
     elif (diffSys == 'BKGNoFit'): diffSysName = 'kNoFit'
     elif (diffSys == 'BKGV2'): diffSysName = 'kV2'
-    mainJetTaskName = 'AliAnalysisTaskRawJetWithEP_R02PtCut'+str(leadingTrackPtCut)+diffSysName+'_histos'
+    tempJetRLabel = JetRLabel
+    if JetRLabel=='R021': tempJetRLabel = 'R02'
+    mainJetTaskName = 'AliAnalysisTaskRawJetWithEP_'+tempJetRLabel +'PtCut'+str(leadingTrackPtCut)+diffSysName+'_histos'
     lMainHJetDists = f.Get(mainJetTaskName)
     f.ls()
     print(mainJetTaskName)
-    jetTaskName = 'Jet_AKTChargedR020_tracks_pT0150_pt_scheme'
+    jetTaskName = 'Jet_AKTCharged'+tempJetRLabel+'0_tracks_pT0150_pt_scheme'
     lHJetDists = lMainHJetDists.FindObject(jetTaskName)
     f.Close()
     
@@ -568,7 +594,7 @@ def ScaleJetHists(lMainTree, lScaleFactor, PtHardBins, centKind, inEmbFileBaseNa
 
 
 #22  devHistForEachCent   222222222222222222222222222222222222222222222222222222
-def PlotPerformanceHistEachCent(lMainTree, centKind, epBin):
+def PlotPerformanceHistEachCent(lMainTree, centKind, epBin, JetRLabel):
     print('=== s === Add Performance Hists  #############################')
     
     # baseMatchedJetHists = lMainTree.FindObject('hResponseMatrixDiff')
@@ -585,7 +611,7 @@ def PlotPerformanceHistEachCent(lMainTree, centKind, epBin):
     baseHMatchingDistance = lMainTree.FindObject('hMatchingDistance')
 
     for centBin in range(embCentBinRange[centKind][0], embCentBinRange[centKind][1]):
-        ptRangeDict, ptBinArrayDict = PtRangeList.eachJetPtBinDef(0,centBin)
+        ptRangeDict, ptBinArrayDict = PtRangeList.eachJetPtBinDef(JetRLabel, 0,centBin)
         ########################################################################
         # print('1. Set Up RM to Each Centrality for all histograms        #####')
         # tempOriginMatchedJetHists = baseMatchedJetHists.Clone()
@@ -770,8 +796,8 @@ def PlotPerformanceHistEachCent(lMainTree, centKind, epBin):
         ##############################################################################
 
 
-def EditRMForUF(outList, hOriginRM, centBin, epBin, label):
-    ptRangeDict, ptBinArrayDict = PtRangeList.eachJetPtBinDef(0,centBin)
+def EditRMForUF(outList, hOriginRM, centBin, epBin, JetRLabel, label):
+    ptRangeDict, ptBinArrayDict = PtRangeList.eachJetPtBinDef(JetRLabel, 0,centBin)
     hRM_rebin = rebinRM(outList, hOriginRM, epBin, ptBinArrayDict)
     hRM_norm = normalizeRM(outList,hRM_rebin, epBin, outList, ptBinArrayDict)
     
@@ -901,8 +927,8 @@ def OFileStracture(lMainTree, numOfCentBin):
 
 if __name__ == "__main__":
     args = sys.argv
-    # centKind, LHCPeriod, leadingTrackPtCut, diffSys = sys.argv
+    # centKind, LHCPeriod, leadingTrackPtCut, diffSys = sys.argv, jetR
     # MergeScalePtHardPlots()
     # MergeScalePtHardPlots(centKind, LHCPeriod, leadingTrackPtCut, diffSys)
-    print(args[1], args[2], args[3],args[4])
-    MergeScalePtHardPlots(int(args[1]), args[2], int(args[3]),args[4])
+    print(args[1], args[2], args[3],args[4],args[5])
+    MergeScalePtHardPlots(int(args[1]), args[2], int(args[3]),args[4],args[5])

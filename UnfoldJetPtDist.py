@@ -13,8 +13,6 @@ import ROOT
 from ROOT import TCanvas, TFile, TProfile, TNtuple, TH1F, TH2F
 
 # Load the RooUnfold library
-# ROOT.gSystem.Load("$ALICE_WORK_DIR/osx_x86-64/RooUnfold/latest/lib/libRooUnfold.dylib")
-# ROOT.gSystem.Load("$ALIBUILD_WORK_DIR/slc7_x86-64/RooUnfold/latest/lib/libRooUnfold.so")
 ROOT.gSystem.Load("/persist/sw/slc7_x86-64/RooUnfold/latest/lib/libRooUnfold.so")
 
 from ROOT import RooUnfoldResponse
@@ -32,22 +30,20 @@ import PtRangeList
 
 isClosureTest = False
 isClosure  = False
+isUFTest = False
+bMcReplace = False
+JetR = 4 # [2, 3, 4, 5]
+leadingTrackPtCut = 5 # 0, 5, 7 GeV/c
 
 #[kBrack, kRed, kBlue, kGreen+3, kOrange+8, kAzure+10, kSpring+4, kViolet+1, kPink+9, kSpring-9, kOrange+8, kAzure+1, kTeal+4, kRed-7, kBlue-7, kGreen-2, kOrange-2, kViolet+7, kSpring+4, kTeal-5]
 lFillColor = [1, 632, 600, 416+3, 800+8, 860+10, 900+10, 820+4, 880+1, 900+9, 820-9, 800+1, 860+1, 840+4, 632-7, 600-7, 416-2, 800-2, 880+7, 820+4, 840-5]
 
-
 lEPLabel = ['OutOfPlane', 'InPlane', 'Inclusive']
-leadingTrackPtCut = 5 # 0, 5, 7 GeV/c
-diffSys = 'V0A' # 98%: '', 94%: 'TrackEff094', 'BKGNoFit', 'BKGV2', 'V0C', 'V0A'
-lDiffSys = ['TrackEff094', 'BKGNoFit', 'BKGV2', 'V0C', 'V0A', '']
+lDiffSys = ['TrackEff094', 'BKGNoFit', 'BKGV2', 'V0C', 'V0A', 'Norm']
 
-JetR = 2 # [2, 3, 4, 5]
 lPtCut = [0, 3, 5, 7, 10]
 # lCentDivKind = [[0, 1], [1, 2, 3], [3, 4, 5], [5, 6, 7], [7, 8, 9, 10]]
 lCentDivKind = [[0, 5], [5, 10], [10, 30], [30, 50], [50, 80]]
-
-# pT range 5 sigma [32., 26., 20., 10., 5.5]
 
 numOfCentBin = 5
 
@@ -57,21 +53,28 @@ TAA = [26.08, 20.44, 11.58, 3.92, 0.89] # [0-5, 5-10, 10-30, 30-50, 50-80]
 
 regPara = 6 # The number of unfold iteration 
 
-inputDir = '/Users/tkumaoka/ALICE/cernbox/SWAN_projects/outputFiles/LHC18qr/pass3/Ch/Embedding/'
+# LHCPeriod = 'LHC15o'
+LHCPeriod = 'LHC18qr'
+baseDir='/Users/tkumaoka/ALICE/cernbox/SWAN_projects/outputFiles/'+LHCPeriod+'/pass3/Ch/'
 # inputDir = './'
+inputDir = baseDir+'Embedding/R0'+str(JetR)+'/'
 
-outputDir = '/Users/tkumaoka/ALICE/cernbox/SWAN_projects/outputFiles/LHC18qr/pass3/Ch/Unfolded/'
 # outputDir = './'
+outputDir = baseDir+'Unfolded/R0'+str(JetR)+'/'
+# outputDir = baseDir+'Unfolded/UFTest/'
+
 oPerformanceDir = outputDir + 'UnfoldPerformancePlot/'
 
 
 ### Main START  ################################################################
 def UnfoldJetPtDist():
-    for diffBin in range(0, 6):
-        diffSys = lDiffSys[diffBin]
 
+    for diffBin in range(0, 6):
+        if(JetR != 2 and diffBin == 1): continue
+        
+        diffSys = lDiffSys[diffBin]
         inputFileName = 'EmbedPtHardScaledResults'\
-            +'_TrackPtCut'+str(leadingTrackPtCut)+'_'+diffSys+'_Ver1.root'
+            +'_TrackPtCut'+str(leadingTrackPtCut)+'_'+diffSys+'.root'
         outputFileName =  outputDir + 'UnfoldedPtDists'\
             +'_TrackPtCut'+str(leadingTrackPtCut)+'_'+diffSys+'.root'
 
@@ -96,18 +99,17 @@ def UnfoldJetPtDist():
             obsKind = 0
             if epBin == 2: obsKind = 1
             for centBin in range(0, numOfCentBin):
-                ptRangeDict, ptBinArrayDict = PtRangeList.eachJetPtBinDef(obsKind, centBin)
+                JetRLabel = 'R0'+str(JetR)
+                ptRangeDict, ptBinArrayDict = PtRangeList.eachJetPtBinDef(JetRLabel, obsKind, centBin)
 
                 label = ''
                 label = baseLabel
-                # label = label + '_cent{}'.format(centBin) + '_' +lEPLabel[epBin]
 
                 nEventsData, nEventsResponse, vertexEfficiency = eventInfoExtract(mainTree, centBin)
                 scalePraDict = {'nEventsData':nEventsData, 'nEventsResponse':nEventsResponse,\
                     'vertexEfficiency':vertexEfficiency}
                 print(scalePraDict)
                 
-                # mainTree[epBin][centBin].ls()
                 hRMDict = getResponseMatrix(mainTree[epBin][centBin], centBin, ptRangeDict, ptBinArrayDict, label)
 
                 jetSpectDict = getJetSpectrums(mainTree[epBin][centBin], hRMDict, \
@@ -127,6 +129,7 @@ def UnfoldJetPtDist():
                 # hUnfoldedDistDictSVD = UnfoldJetSpectrum(hRMDict, responsDict, jetSpectDict, hKinEff, \
                 #     ptRangeDict, ptBinArrayDict, unfoldType, label, epBin, centBin)
                 
+                
                 outputFile.cd()
                 for key in hUnfoldedDistDictBayes.values():
                     lOMainTree[epBin][centBin][0].Add(key)
@@ -142,6 +145,7 @@ def UnfoldJetPtDist():
                 inputFile.cd()
 
         UnfoldPlots.plotRMRatio(lOMainTree, numOfCentBin)
+        RMRatioQA(lOMainTree[epBin][centBin][1])
 
         inputFile.cd()
 
@@ -157,11 +161,8 @@ def UnfoldJetPtDist():
 ###      get Response Matrix                                                 ###
 ###############################################################################
 def getResponseMatrix(mainCentTree, centBin, ptRangeDict, ptBinArrayDict, label):
-    # hOrigRMName = 'hRM_forUnfold' + '_Cent' + str(centBin) + '_RebinnedNormed'
     hOrigRMName = 'hRM' + '_Cent' + str(centBin)
     hRM = mainCentTree.FindObject(hOrigRMName) # No cut
-    # histName = 'hRM' + label
-    # hRM.SetName(histName)
 
     hRMUncut = rebinResponseMatrix(hRM, ptBinArrayDict, 'mcFullDet')
     histName = 'hRM_uncut' + '_Cent' + str(centBin)+ label
@@ -180,12 +181,12 @@ def getResponseMatrix(mainCentTree, centBin, ptRangeDict, ptBinArrayDict, label)
     hRMDetLvLcut = rebinResponseMatrix(hRM, ptBinArrayDict, 'mcDetL')
     histName = 'hRM_DetLvLcut' + '_Cent' + str(centBin)+ label
     hRMDetLvLcut.SetName(histName)
-    # hRMDetLvLcut = normalizeResponseMatrix(hRMDetLvLcut)  #?????
+    # hRMDetLvLcut = normalizeResponseMatrix(hRMDetLvLcut)  #???
 
     hRMDetLvUcut = rebinResponseMatrix(hRM, ptBinArrayDict, 'mcDetU')
     histName = 'hRM_DetLvUcut' + '_Cent' + str(centBin)+ label
     hRMDetLvUcut.SetName(histName)
-    # hRMDetLvUcut = normalizeResponseMatrix(hRMDetLvUcut)  #?????
+    # hRMDetLvUcut = normalizeResponseMatrix(hRMDetLvUcut)  #???
 
     # Get response matrix from response file (Measured, True) to be used for the unfolding, 
     # with pT-det range cut to desired range, and re-bin. 
@@ -210,11 +211,11 @@ def getResponseMatrix(mainCentTree, centBin, ptRangeDict, ptBinArrayDict, label)
 ################################################################################
 def getJetSpectrums(mainCentTree, hRMDict,ptRangeDict,ptBinArrayDict,scalePraDict,centBin, label):
     dEta = 2 * (0.9 - (0.1* JetR))
-    hOrigRawJetName = 'hJetCorrPtLocal_' + str(centBin)
-    # lCentChange = [0,1,2,4,6]
-    # hOrigRawJetName = 'hJetCorrPtLocal_' + str(lCentChange[centBin])
+    hOrigRawJetName = ''
+    if isUFTest==False: hOrigRawJetName = 'hJetCorrPtLocal_' + str(centBin)
+    else: hOrigRawJetName = 'hMatchDetJetPt_Cent' + str(centBin)
     hOrigMeasuredJetPerBin = mainCentTree.FindObject(hOrigRawJetName)
-
+        
     hMeasuredJetPerBin = hOrigMeasuredJetPerBin.Clone() # w/ background subtraction
     histName = 'hMeasuredJet' + label
     hMeasuredJetPerBin.SetName('hMeasuredJet')
@@ -236,10 +237,11 @@ def getJetSpectrums(mainCentTree, hRMDict,ptRangeDict,ptBinArrayDict,scalePraDic
     histName = 'hMeasuredJetYield' + label
     hMeasuredJetYieldPerBin.SetName(histName)
     hMeasuredJetYieldPerBin.Sumw2()
-    hMeasuredJetYieldPerBin.Scale(1./scalePraDict['nEventsData'])
-    hMeasuredJetYieldPerBin.Scale(1./TAA[centBin])
+    if isUFTest == False:
+        hMeasuredJetYieldPerBin.Scale(1./scalePraDict['nEventsData'])
+        hMeasuredJetYieldPerBin.Scale(1./TAA[centBin])
     # hMeasuredJetYieldPerBin.Scale(1./dEta)
-    hMeasuredJetYieldPerBin.Scale(dEta)
+    hMeasuredJetYieldPerBin.Scale(dEta) #???
 
     #rebin the measured input spectrum to the final binning 
     # and save it for statistical error comparision
@@ -250,10 +252,11 @@ def getJetSpectrums(mainCentTree, hRMDict,ptRangeDict,ptBinArrayDict,scalePraDic
     binArray = ptBinArrayDict['mcDetL']
     hMeasuredJetYield_LCut.Sumw2()
     hMeasuredJetYield_LCut = hMeasuredJetYield_LCut.Rebin(nBins, histName, binArray)
-    hMeasuredJetYield_LCut.Scale(1./scalePraDict['nEventsData'])
-    hMeasuredJetYield_LCut.Scale(1./TAA[centBin])
+    if isUFTest == False:
+        hMeasuredJetYield_LCut.Scale(1./scalePraDict['nEventsData'])
+        hMeasuredJetYield_LCut.Scale(1./TAA[centBin])
     # hMeasuredJetYield_LCut.Scale(1./dEta)
-    hMeasuredJetYield_LCut.Scale(dEta)
+    hMeasuredJetYield_LCut.Scale(dEta) #???
 
     hMeasuredJetYield_UCut = hMeasuredJetPerBin.Clone()
     histName = 'hMeasuredJetYield_UCut' + label
@@ -262,10 +265,11 @@ def getJetSpectrums(mainCentTree, hRMDict,ptRangeDict,ptBinArrayDict,scalePraDic
     binArray = ptBinArrayDict['mcDetU']
     hMeasuredJetYield_UCut.Sumw2()
     hMeasuredJetYield_UCut = hMeasuredJetYield_UCut.Rebin(nBins, histName, binArray)
-    hMeasuredJetYield_UCut.Scale(1./scalePraDict['nEventsData'])
-    hMeasuredJetYield_UCut.Scale(1./TAA[centBin])
+    if isUFTest == False:
+        hMeasuredJetYield_UCut.Scale(1./scalePraDict['nEventsData'])
+        hMeasuredJetYield_UCut.Scale(1./TAA[centBin])
     # hMeasuredJetYield_UCut.Scale(1./dEta)
-    hMeasuredJetYield_UCut.Scale(dEta)
+    hMeasuredJetYield_UCut.Scale(dEta) #???
 
     # Get the truth-level jet spectrum (matched) from response matrix (already re-binned)
     # Do exclude under and overflow bins
@@ -280,16 +284,23 @@ def getJetSpectrums(mainCentTree, hRMDict,ptRangeDict,ptBinArrayDict,scalePraDic
     histName = 'hMCGenJetYieldPerBin' + label
     hMCGenJetYieldPerBin.SetName(histName)
     hMCGenJetYieldPerBin.Sumw2()
-    # nBins = len(ptBinArrayDict['mcDet']) - 1
-    # binArray = ptBinArrayDict['mcDet']
+    
     nBins = len(ptBinArrayDict['mcGen']) - 1
     binArray = ptBinArrayDict['mcGen']
     hMCGenJetYieldPerBin = hMCGenJetYieldPerBin.Rebin(nBins, histName, binArray)
+    hRMDict['main'].SaveAs('TempOrigRM.root')
+    if bMcReplace == True:
+        hMCGenJetYieldPerBin, hApplyChagePriorRatioData \
+            = changePriorByData(hRMDict, hOrigMeasuredJetPerBin, ptBinArrayDict, centBin)
+        hMCGenJetYieldPerBin.SaveAs('TempDiffPriorPerBin.root')
+        hApplyChagePriorRatioData.SaveAs('TempApplyChagePriorRatio.root')
+    if centBin ==0: hRMDict['main'].SaveAs('TempReplacedRM.root')
     # hMCGenJetYieldPerBin.Scale(1./scalePraDict['nEventsResponse'])
-
+    
     hDiffPriorPerBin, hApplyChagePriorRatio \
         = changePrior(hRMDict, hOrigMeasuredJetPerBin, ptBinArrayDict, centBin)
     hApplyChagePriorRatio.SetName('hApplyChagePriorRatio'+'CentBin'+str(centBin))
+
 
     # Get the det-level jet spectrum (matched) from response matrix projection, 
     # after cutting the pT-det range (already re-binned)
@@ -337,18 +348,18 @@ def getResponce(mainTree, hRMDict, jetSpectDict, label):
 
     histName = hRMDict['main'].GetName() + '_Response' + label
     response = RooUnfoldResponse(0, hJetMCGenUncutPerBin, hRMDict['main'], histName, histName)
-    response.UseOverflow(False) # ??????????????????????????????????????????????
+    response.UseOverflow(False) # ???
 
     histName = hRMDict['main'].GetName() + '_ResponseDiffPrior' + label
     responseDiffPrior = RooUnfoldResponse(0, hJetMCGenDiffPriorPerBin, hRMDict['changePrior'], histName, histName)
-    responseDiffPrior.UseOverflow(False) # ??????????????????????????????????????????????
+    responseDiffPrior.UseOverflow(False) # ???
     
     histName = hRMDict['DetLvLcut'].GetName() + '_Response' + label
     responseDetLvLcut = RooUnfoldResponse(0, hJetMCGenUncutPerBin, hRMDict['DetLvLcut'], histName, histName)
-    responseDetLvLcut.UseOverflow(False) # ??????????????????????????????????????????????
+    responseDetLvLcut.UseOverflow(False) # ???
     histName = hRMDict['DetLvUcut'].GetName() + '_Response' + label
     responseDetLvUcut = RooUnfoldResponse(0, hJetMCGenUncutPerBin, hRMDict['DetLvUcut'], histName, histName)
-    responseDetLvUcut.UseOverflow(False) # ??????????????????????????????????????????????
+    responseDetLvUcut.UseOverflow(False) # ???
 
     histName = 'hRMUncut' + label
     respUncut = RooUnfoldResponse(0, 0, hRMDict['uncut'], histName, histName)
@@ -413,15 +424,14 @@ def setPrior(hRM, hJetSpectTruUncutPerBin, label):
 def changePrior(hRMOrig, hMeasuredJetSpectPerBinOrig, ptBinArrayDict, centBin):
     nBins = len(ptBinArrayDict['mcDet']) - 1
     binArray = ptBinArrayDict['mcDet']
-
+    
     hRM = hRMOrig['uncut'].Clone('hRMForChangePrior')
-
+    
     hMCDet = hRM.ProjectionX()
     hMCDet.Sumw2()
     hMCDet = hMCDet.Rebin(nBins, 'hMCDet_px', binArray)
     hMCDet.Scale(1., "width")
     hMCDet.Scale(1./hMCDet.Integral())
-    # hMCDet.SaveAs('hogeMCDet.root')
     
     hApplyRatio = hMeasuredJetSpectPerBinOrig.Clone('hMeasForChangePrior')
     hApplyRatio.Sumw2()
@@ -429,15 +439,16 @@ def changePrior(hRMOrig, hMeasuredJetSpectPerBinOrig, ptBinArrayDict, centBin):
     if centBin==3:hApplyRatio.SetName('hApplyRatio')
     hApplyRatio.Scale(1./hApplyRatio.Integral())
     hApplyRatio.Scale(1., "width")
-    # if centBin==3:hApplyRatio.SaveAs('hogeMeas.root')
     hApplyRatio.Divide(hMCDet)
-    # if centBin==3:hApplyRatio.SaveAs('hogeRatio.root')
     
-    fRatioFit = ROOT.TF1('fRatioFit',"[0]*x*x + [1]*x + [2]",binArray[0],binArray[-1])
+    # fRatioFit = ROOT.TF1('fRatioFit',"[3]*x*x*x+[2]*x*x+[1]*x+[0]",binArray[0],binArray[-1])
+    fRatioFit = ROOT.TF1('fRatioFit', \
+        '(x<80.)*([2]*x*x+[1]*x+[0]) + (x>80.)*[3]', binArray[0],binArray[-1])
     hApplyRatio.Fit('fRatioFit')
     fRatioFitP0 = fRatioFit.GetParameter(0) 
     fRatioFitP1 = fRatioFit.GetParameter(1)
     fRatioFitP2 = fRatioFit.GetParameter(2)
+    fRatioFitP3 = fRatioFit.GetParameter(3)
 
     hMCGenReweightPrior = hRM.ProjectionY()
     hMCGenReweightPrior.Sumw2()
@@ -445,20 +456,28 @@ def changePrior(hRMOrig, hMeasuredJetSpectPerBinOrig, ptBinArrayDict, centBin):
     binArray = ptBinArrayDict['mcGen']
     hMCGenReweightPrior = hMCGenReweightPrior.Rebin(nBins, 'ReweightPrior_py', binArray)
     hMCGenReweightPrior.SetName('ReweightPrior_py')
-
+    
     nXBins = hRM.GetNbinsX()
     nYBins = hMCGenReweightPrior.GetNbinsX()
     for ptTruBin in range(1,nYBins+1):
         genPtVal = hMCGenReweightPrior.GetBinCenter(ptTruBin)
         genCount = hMCGenReweightPrior.GetBinContent(ptTruBin)
         genPtError = hMCGenReweightPrior.GetBinError(ptTruBin)
-        scaleVal = fRatioFitP0*genPtVal*genPtVal + fRatioFitP1*genPtVal +fRatioFitP2
-        genCountScaled = genCount * scaleVal
-        # print('scaleVal = '+str(scaleVal))
-        # print('genCountScaled = '+str(genCountScaled))
+        scaleVal = 1
+        if genPtVal < 80.: 
+            scaleVal = fRatioFitP2*genPtVal*genPtVal + fRatioFitP1*genPtVal +fRatioFitP0
+        else: scaleVal = fRatioFitP3
+        if(scaleVal <= 0.): 
+            temLGenPtVal = hMCGenReweightPrior.GetBinCenter(ptTruBin-1)
+            temHGenPtVal = hMCGenReweightPrior.GetBinCenter(ptTruBin+1)
+            scaleLVal = fRatioFitP2*temLGenPtVal*temLGenPtVal + fRatioFitP1*temLGenPtVal +fRatioFitP0
+            scaleHVal = fRatioFitP2*temHGenPtVal*temHGenPtVal + fRatioFitP1*temHGenPtVal +fRatioFitP0
+            scaleVal = (scaleLVal+scaleHVal) /2 
+
+        genCountScaled = scaleVal * genCount
+        # print('scaleVal = '+str(scaleVal)+', genCount = '+str(genCount))
         
         hMCGenReweightPrior.SetBinContent(ptTruBin, genCountScaled)
-        # hMCGenReweightPrior.SetBinError(ptTruBin, genPtError)
         hMCGenReweightPrior.SetBinError(ptTruBin, 0.)
 
         for ptDetBin in range(1,nXBins+1):
@@ -469,12 +488,100 @@ def changePrior(hRMOrig, hMeasuredJetSpectPerBinOrig, ptBinArrayDict, centBin):
             hRM.SetBinError(ptDetBin,ptTruBin, hRMErr)
 
     hRMReWeight = rebinResponseMatrix(hRM, ptBinArrayDict, 'mcDet')
-    # hRMReWeight = normalizeResponseMatrix(hRMReWeight)  #?????
+    # hRMReWeight = normalizeResponseMatrix(hRMReWeight)  #???
     hRMOrig['changePrior'] = hRMReWeight
     
     return hMCGenReweightPrior, hApplyRatio
+    
+def changePriorByData(hRMOrig, hMeasuredJetSpectPerBinOrig, ptBinArrayDict, centBin):
+    lPPPtBin = [25.0,35.0,45.0,55.0,65.0,77.5,92.5,110.0,130.0]
+    lPPCrossVal = [0.00033658,7.0049e-05,2.0835e-05,7.6856e-06,3.2984e-06,1.3575e-06,5.2627e-07,2.08e-07,8.1184e-08]
+    lPPStatErr = [1.0078e-06,3.5015e-07,1.3275e-07,6.2404e-08,3.3665e-08,1.688e-08, 7.7978e-09,3.5734e-09,1.5853e-09]
+    lPPSysErr = [2.395e-05, 5.6053e-06,1.7336e-06,6.1249e-07,2.6578e-07,1.0888e-07,4.2538e-08,1.7536e-08,7.1567e-09]
+    lPPPtBin = array('d',lPPPtBin)
+    lPPCrossVal = array('d',lPPCrossVal)
+    lPPStatErr = array('d',lPPStatErr)
+    lPPSysErr = array('d',lPPSysErr)
+    
+    lPbPbPtBin = [25.0,35.0,45.0,55.0,65.0,77.5,92.5,110.0,130.0]
+    lPbPbCrossVal = [7.7976e-05,1.989e-05,6.2039e-06,2.7504e-06,1.185e-06,6.2746e-07,2.2934e-07,1.0403e-07,3.7583e-08]
+    lPbPbStatErr = [6.7585e-07,2.7643e-07,1.3152e-07,7.8133e-08,4.9997e-08,2.8171e-08,1.7578e-08,9.5131e-09,4.8666e-09]
+    lPbPbSysErr = [3.7016e-05,1.0777e-05,3.1399e-06,1.0309e-06,4.2187e-07,1.5922e-07,6.4106e-08,2.1115e-08,1.6481e-08]
+    lPbPbPtBin = array('d', lPbPbPtBin)
+    lPbPbCrossVal = array('d', lPbPbCrossVal)
+    lPbPbStatErr = array('d', lPbPbStatErr)
+    lPbPbSysErr = array('d', lPbPbSysErr)
+    
+    histName = 'hPbPbData'
+    histTitle = histName + ';#it{p}_{T} [GeV/#it{c}]; Xsec'
+    histBins = len(lPPPtBin)-1
+    hPbPbData = ROOT.TH1D(histName,histTitle,histBins,lPPPtBin)
+    hPbPbDataErr = ROOT.TH1D(histName,histTitle,histBins,lPPPtBin)
+    for bin in range(1, hPbPbData.GetNbinsX()):
+        hPbPbData.SetBinContent(bin, lPbPbCrossVal[bin-1])
+        hPbPbData.SetBinError(bin, lPbPbStatErr[bin-1])
+        hPbPbDataErr.SetBinContent(bin, lPbPbStatErr[bin-1])
+    
+    # fDistPowFit = ROOT.TF1('fDistPowFit',"[0]*pow(x,[1])",lPbPbPtBin[0],lPbPbPtBin[-1])
+    fDistPowFit = ROOT.TF1('fDistPowFit',"[3]*x*x*x+[2]*x*x+[1]*x+[0]",lPbPbPtBin[0],lPbPbPtBin[-1])
+    hPbPbData.Fit('fDistPowFit')
+    fPowPol0 = fDistPowFit.GetParameter(0)
+    fPowPol1 = fDistPowFit.GetParameter(1)
+    fPowPol2 = fDistPowFit.GetParameter(2)
+    fPowPol3 = fDistPowFit.GetParameter(3)
+    fDistPowErrFit = ROOT.TF1('fDistPowErrFit',"exp([0]+[1]*x)",lPbPbPtBin[0],lPbPbPtBin[-1])
+    hPbPbDataErr.Fit('fDistPowErrFit')
+    fPowErrPol0 = fDistPowErrFit.GetParameter(0)
+    fPowErrPol1 = fDistPowErrFit.GetParameter(1)
+    
+    hRM = hRMOrig['uncut'].Clone('hRMForChangePriorByData')
+    nBins = len(ptBinArrayDict['mcGen']) - 1
+    binArray = ptBinArrayDict['mcGen']
+    hMCDetReweightPrior = hRM.ProjectionX()
+    hMCDetReweightPrior.Sumw2()
+    hMCDetReweightPrior = hMCDetReweightPrior.Rebin(nBins, 'ReweightPrior_py', binArray)
+    hMCDetReweightPrior.SetName('ReweightPrior_py')
+    nXBins = hRM.GetNbinsX()
+    nYBins = hMCDetReweightPrior.GetNbinsX()
 
-################################################################################
+    histName = 'hApplyRatioFitData'
+    histTitle = histName + ';#it{p}_{T} [GeV/#it{c}]; Xsec'
+    hApplyRatio = ROOT.TH1D(histName,histTitle,50,0.,250)
+    hApplyRatio.Sumw2()
+    hApplyRatio = hApplyRatio.Rebin(nBins, 'hApplyRatio', binArray)
+    for ptTruBin in range(1,nYBins+1):
+        genPtVal = hMCDetReweightPrior.GetBinCenter(ptTruBin)
+        genCount = hMCDetReweightPrior.GetBinContent(ptTruBin)
+        genPtError = hMCDetReweightPrior.GetBinError(ptTruBin)
+        # scaleVal = 1.
+        # scaleVal = (fPowPol0*pow(genPtVal, fPowPol1))/genCount
+        scaleVal = (fPowPol3*genPtVal*genPtVal*genPtVal+fPowPol2*genPtVal*genPtVal\
+            +fPowPol1*genPtVal+fPowPol0)/genCount
+
+        if genPtError == 0.: genPtError = 1
+        scaleErr = (math.exp(fPowErrPol0+fPowErrPol1*genPtVal))/genPtError
+        
+        hApplyRatio.Fill(genPtVal,scaleVal)
+        genCountScaled = fPowPol0*pow(genPtVal, fPowPol1)
+        genErrScaled = math.exp(fPowErrPol0+fPowErrPol1*genPtVal)
+        
+        hMCDetReweightPrior.SetBinContent(ptTruBin, genCountScaled)
+        hMCDetReweightPrior.SetBinError(ptTruBin, genErrScaled)
+        
+        for ptDetBin in range(1,nXBins+1):
+            hRMContent = hRM.GetBinContent(ptDetBin,ptTruBin)
+            hRMErr = hRM.GetBinError(ptDetBin,ptTruBin)
+            
+            hRM.SetBinContent(ptDetBin, ptTruBin, scaleVal*hRMContent)
+            hRM.SetBinError(ptDetBin,ptTruBin, scaleErr*hRMErr)
+
+    hRMReWeight = rebinResponseMatrix(hRM, ptBinArrayDict, 'mcDet')
+    # hRMReWeight = normalizeResponseMatrix(hRMReWeight)  #???
+    hRMOrig['main'] = hRMReWeight
+    
+    return hMCDetReweightPrior, hApplyRatio
+
+
 ################################################################################
 def eventInfoExtract(mainTree, centBin):
     # Get the number of accepted events in data in the specified centrality range
@@ -520,10 +627,7 @@ def eventInfoExtract(mainTree, centBin):
     return nEventsData, nEventsResponse, vertexEfficiency
 ################################################################################
 
-
-################################################################################
 # Rebin the response matrix to have variable binning                          ##
-################################################################################
 def rebinResponseMatrix(hRM, ptBinArrayDict, detRangeType):
     histname = "{}NewRebinned_{}".format(hRM.GetName(), detRangeType)
     title = histname + ";#it{p}_{T,corr}^{det} (GeV/#it{c});#it{p}_{T}^{truth} (GeV/#it{c})"
@@ -558,11 +662,8 @@ def rebinResponseMatrix(hRM, ptBinArrayDict, detRangeType):
     return hRM_rebin
 ################################################################################
 
-
-################################################################################
 # Normalize response matrix                                                   ##
 # Normalize the pT-truth projection to 1                                      ##
-################################################################################
 def normalizeResponseMatrix(hResponseMatrix):
     # Make projection onto pT-true axis (y-axis), and scale appropriately
     # Do exclude under and overflow bins
@@ -594,7 +695,7 @@ def UnfoldJetSpectrum(hRMDict, responsDict, jetSpectDict, hKinEff, \
 
     response = responsDict['main']
     hMeasJetYieldPerBin = jetSpectDict['measYieldPerBin']
-    # hMeasJetYieldPerBin = jetSpectDict['mcDetYieldPerBin'] # trivial test
+    # hMeasJetYieldPerBin = jetSpectDict['mcDetYieldPerBin'] # trivial test 
     
     # Set some info based on specified unfolding type
     if "Bayes" in unfoldType: regParaName = "nIter"
@@ -643,9 +744,6 @@ def UnfoldJetSpectrum(hRMDict, responsDict, jetSpectDict, hKinEff, \
             # UnfoldPlots.svdDVectorPlot(unfold, regPara, label)
         
         # Apply RM to unfolded result
-        # UnfoldPlots.plotKinematicEfficiency(hRMDict['main'], hRMDict['uncut'], jetSpectDict, \
-        #         ptRangeDict, ptBinArrayDict['mcGen'], label,oPerformanceDir)
-        
         UnfoldPlots.plotCorrelationCoefficients(hCov, i, label,oPerformanceDir)
 
         print('Plot Fold Test ======')
@@ -687,13 +785,18 @@ def UnfoldJetSpectrum(hRMDict, responsDict, jetSpectDict, hKinEff, \
             lUnfoldedDistsDict[hUnfoldRegParaKindNames[histKindNum]] = tempHist
     
     label =  lEPLabel[epBin]+'/Cent'+str(centBin)+'/'+ unfoldType
-
+    
     # kViolet+4 kViolet+1 kAzure-3 kAzure+10 kGreen+3 kSpring-8 kSpring+9 kOrange kOrange+7 kOrange+10
     lColor = [880+4, 880+1, 860-3, 860+10, 416+3,  820-8, 820+9, 800+7, 800+10]
     UnfoldPlots.plotUnfoldedKDevelopedSpectra(0, lHUFJetKDev, regPara, \
         ptRangeDict,ptBinArrayDict,label,lColor,oPerformanceDir)
     UnfoldPlots.plotUnfoldedKDevelopedSpectra(1, lHRFJetKDev, regPara, \
         ptRangeDict,ptBinArrayDict,label,lColor,oPerformanceDir)
+    
+    UnfoldPlots.plotRefoldRawRatios(jetSpectDict['measYieldPerGeV'], \
+                lHRFJetKDev, regPara, ptRangeDict,ptBinArrayDict,\
+                    label,lColor,oPerformanceDir)
+        
     # == e == regularization parameter difference Tests 222222222222222222222222
 
     # == s == detector level pT range difference Tests 3333333333333333333333333
@@ -705,11 +808,9 @@ def UnfoldJetSpectrum(hRMDict, responsDict, jetSpectDict, hKinEff, \
     histName = 'hUnfoldedJetPt_'+unfoldType+'_DetLvUcut'
     hUFJetUcut.SetName(histName)
     applyKinEff(hUFJetUcut, hKinEff)
-    # hUFJetLcut.GetXaxis().SetRangeUser(ptRangeDict['reported'][0], ptRangeDict['reported'][1])
     hUFJetLcut.Rebin(len(ptBinArrayDict['reported'])-1, histName, ptBinArrayDict['reported'])
     hUFJetLcut.Scale(1., "width")
     lUnfoldedDistsDict['DetLvLcut'] = hUFJetLcut
-    # hUFJetUcut.GetXaxis().SetRangeUser(ptRangeDict['reported'][0], ptRangeDict['reported'][1])
     hUFJetUcut.Rebin(len(ptBinArrayDict['reported'])-1, histName, ptBinArrayDict['reported'])
     hUFJetUcut.Scale(1., "width")
     lUnfoldedDistsDict['DetLvUcut'] = hUFJetUcut
@@ -718,6 +819,7 @@ def UnfoldJetSpectrum(hRMDict, responsDict, jetSpectDict, hKinEff, \
     # == s == different prior Unfolding  44444444444444444444444444444444444444
     hUFJetDiffPrior, hCovDiffPrior = UnfoldSpectrum1D(responsDict['diffPrior'], \
         hMeasJetYieldPerBin, regPara, "Bayes", "DiffPrior")
+    
     # hUFJetDiffPrior.GetXaxis().SetRangeUser(ptRangeDict['reported'][0], ptRangeDict['reported'][1])
     hUFJetDiffPrior.Rebin(len(ptBinArrayDict['reported'])-1, histName, ptBinArrayDict['reported'])
     histName = 'hUnfoldedJetPt_'+unfoldType+'_DiffPrior'
@@ -758,8 +860,7 @@ def UnfoldSpectrum1D(respons, jetSpect, iteNum, unfoldType, label):
         unfold = RooUnfoldSvd(respons, jetSpect, iteNum)
         unfold.SetNToys(1000)
         # unfold.SetNToys(10)
-        
-        
+    
     # Perform the unfolding
     # Produces the truth distribution, with errors, 
     # PerBin (will scale by bin width below, after refolding checks)
@@ -781,11 +882,21 @@ def UnfoldSpectrum1D(respons, jetSpect, iteNum, unfoldType, label):
     return hUnfoldedJetSpect, covMatrix
 ################################################################################
 
-
-################################################################################
 ##+++  reweightPythia                                                        ###
-################################################################################
 def reweightPythia(jetSpectDict):
+    hJetSpectTruPerBin.Scale(0.5) # To approximate RAA
+    for bin in range(1, hJetSpectTruPerBin.GetNbinsX()):
+        x = hJetSpectTruPerBin.GetBinCenter(bin)
+        if x < 40:
+            sf = 1/(1 + 0.01*x+0.5)
+            hJetSpectTruPerBin.SetBinContent(bin, hJetSpectTruPerBin.GetBinContent(bin)*sf)
+    hFoldedPythiaTruth = response.ApplyToTruth(hJetSpectTruPerBin)
+    unfoldPlots.reweightTruthSpect(hFoldedPythiaTruth, hJetSpectMeasPerBin)
+################################################################################
+
+##+++  reweightPythia  by pp Data                                            ###
+def reweightPythiaPPData(jetSpectDict):
+    
     hJetSpectTruPerBin.Scale(0.5) # To approximate RAA
     for bin in range(1, hJetSpectTruPerBin.GetNbinsX()):
         x = hJetSpectTruPerBin.GetBinCenter(bin)
@@ -805,16 +916,14 @@ def getMeasuredErrors(hJetSpectMeasuredPerBin):
         binVal = hJetSpectMeasuredPerBin.GetBinCenter(bin)
         content = hJetSpectMeasuredPerBin.GetBinContent(bin)
         error = hJetSpectMeasuredPerBin.GetBinError(bin)
-
-        if content != 0: #????????kuma add ????????????
-            dictErrors[binVal] = error/content
+        if content != 0: dictErrors[binVal] = error/content
 
     return dictErrors
 ################################################################################
 
-################################################################################
-# Smear historgam for error testing                                         　##
-################################################################################
+#################################################################
+# Smear historgam for error testing                          　##
+#################################################################
 def smearPoints(hist,fRandom):
     hnew = hist.Clone("hnew")
 
@@ -827,11 +936,11 @@ def smearPoints(hist,fRandom):
         hnew.SetBinError(bin,errg) #For SVd errors are needed
 
     return hnew
-################################################################################
+#################################################################
 
-################################################################################
+#################################################################
 # Smear spectrum according to the error bars on the measured spectrum        ###
-#################################################################################
+#################################################################
 def smearSpectrum(h, measuredErrors):
     h_smear = h.Clone()
     histName = h.GetName() + '_smear'
@@ -863,7 +972,7 @@ def smearSpectrum(h, measuredErrors):
                 h_smear.SetBinError(bin, 0.3*content)
 
     return h_smear
-################################################################################
+#################################################################
 
 def applyKinEff(hUFJet, hKinEff):
     nBins = hUFJet.GetNbinsX()
@@ -873,14 +982,19 @@ def applyKinEff(hUFJet, hKinEff):
         kinEffVal = hKinEff.GetBinContent(kinEffBin)
         ufYVal = hUFJet.GetBinContent(ptBin)
         corrUFYVal = ufYVal
-        corrUFYVal = ufYVal*kinEffVal
-        # corrUFYVal = ufYVal/kinEffVal
+        corrUFYVal = ufYVal*kinEffVal # ???
+        # corrUFYVal = ufYVal/kinEffVal 
         
         hUFJet.SetBinContent(ptBin, corrUFYVal)
         ufYErr = hUFJet.GetBinError(ptBin)
         hUFJet.SetBinError(ptBin, ufYErr)
 
-################################################################################
+
+def RMRatioQA(lRMHists):
+    lRMHists.FindObject()
+    a = 1
+
+#################################################################
 def OFileStracture(lMainTree, numOfCentBin):
     for epBin in range(0, 3):
         listName = lEPLabel[epBin]
@@ -910,7 +1024,7 @@ def OFileStracture(lMainTree, numOfCentBin):
             
         
         lMainTree.Add(lEPList)
-################################################################################
+#################################################################
 
 
 if __name__ == "__main__":

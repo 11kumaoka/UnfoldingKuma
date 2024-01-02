@@ -73,7 +73,6 @@ def overwrightSomePlots(hBlank, lHists, wErr, legALICE,legJet,leg,\
     legALICE.Draw('same')
     legJet.Draw('same')
     leg.Draw('same')
-
     
     oFileName = outputDir + 'canv' + label + '.root'
     print(oFileName)
@@ -85,10 +84,10 @@ def overwrightSomePlots(hBlank, lHists, wErr, legALICE,legJet,leg,\
 def overwrightSomePlotsWithErr(hBlank, lHists, lHErr, legALICE,legJet,leg,\
         colorList, styleList, label, addDrawOption, outputDir):
     canvasName = 'canvas_' + label
-    c = ROOT.TCanvas(canvasName,canvasName,800,800)
+    c = ROOT.TCanvas(canvasName,canvasName,1000,800)
     c.cd()
     padName = 'pad_' + label
-    pad = ROOT.TPad(padName, padName, 0, 0.3, 1, 1.0)
+    pad = ROOT.TPad(padName, padName, 0, 0.05, 1, 1.0)
     setupPadMargin(pad)
     # pad.SetLogy()
     pad.Draw()
@@ -104,7 +103,7 @@ def overwrightSomePlotsWithErr(hBlank, lHists, lHErr, legALICE,legJet,leg,\
         hErr = lHErr[hBin]
 
         hVal.Draw(drawOption)
-        hErr.Draw('epz 5 same')
+        hErr.Draw('e 5 same')
         
         
     legALICE.Draw('same')
@@ -133,9 +132,9 @@ def plotSpectra(h, h2, h3, nEvents, xRangeMin, xRangeMax, yAxisTitle, ratioYAxis
     pad1.Draw()
     pad1.cd()
     
-    h.SetLineColor(1)
-    h.SetLineWidth(2)
-    h.SetLineStyle(1)
+    # h.SetLineColor(1)
+    # h.SetLineWidth(2)
+    # h.SetLineStyle(1)
 
     # h.Scale(1./nEvents, scalingOptions)
     h.GetYaxis().SetTitle(yAxisTitle)
@@ -147,12 +146,12 @@ def plotSpectra(h, h2, h3, nEvents, xRangeMin, xRangeMax, yAxisTitle, ratioYAxis
     xAxisTitle = h.GetXaxis().GetTitle()
     h.GetXaxis().SetTitle("")
 
-    h2.SetLineColor(4)
-    h2.SetLineWidth(2)
-    h2.SetLineStyle(1)
+    # h2.SetLineColor(4)
+    # h2.SetLineWidth(2)
+    # h2.SetLineStyle(1)
 
-    h.Draw("hist E")
-    h2.Draw("hist same E")
+    h.Draw("hist PE")
+    h2.Draw("hist same PE")
     
     if h3:
         h3.SetLineColor(2)
@@ -162,16 +161,17 @@ def plotSpectra(h, h2, h3, nEvents, xRangeMin, xRangeMax, yAxisTitle, ratioYAxis
         h3.Draw("hist same")
 
     c.cd()
-    pad2 = ROOT.TPad("pad2", "pad2", 0, 0.05, 1, 0.3)
+    pad2 = ROOT.TPad("pad2", "pad2", 0, 0.08, 1, 0.3)
     pad2.SetTopMargin(0)
     pad2.SetBottomMargin(0.35)
     pad2.SetLeftMargin(0.15)
-    pad2.SetRightMargin(0.05)
+    pad2.SetRightMargin(0.03)
     pad2.Draw()
     pad2.cd()
 
     # plot ratio h/h2
-    hRatio = h.Clone()
+    hRatioName = h.GetName() + '_CP'
+    hRatio = h.Clone(hRatioName)
     hRatio.Divide(h2)
     hRatio.SetMarkerStyle(21)
     hRatio.SetMarkerColor(1)
@@ -195,12 +195,9 @@ def plotSpectra(h, h2, h3, nEvents, xRangeMin, xRangeMax, yAxisTitle, ratioYAxis
     min= hRatio.GetBinContent(hRatio.GetMinimumBin())
     max= hRatio.GetBinContent(hRatio.GetMaximumBin())
     #automatic zoom-in for a very small scatter of the points
-    if min>0.5 and max<1.5:
-        hRatio.GetYaxis().SetRangeUser(0.5,1.5)
-    elif yRatioMax>2:
-        hRatio.GetYaxis().SetRangeUser(0,yRatioMax)
-    else:
-        hRatio.GetYaxis().SetRangeUser(2-yRatioMax,yRatioMax)
+    if min>0.5 and max<1.5: hRatio.GetYaxis().SetRangeUser(0.5,1.5)
+    elif yRatioMax>2: hRatio.GetYaxis().SetRangeUser(0,yRatioMax)
+    else: hRatio.GetYaxis().SetRangeUser(2-yRatioMax,yRatioMax)
 
     hRatio.Draw("P E")
     
@@ -230,10 +227,8 @@ def plotSpectra(h, h2, h3, nEvents, xRangeMin, xRangeMax, yAxisTitle, ratioYAxis
     leg2.SetFillStyle(0)
     leg2.SetTextSize(0.04)
     leg2.AddEntry(h, hLegendLabel, "l")
-    if h3:
-        leg2.AddEntry(h3, h3LegendLabel, "l")
-    if h2:
-        leg2.AddEntry(h2, h2LegendLabel, "l")
+    if h3: leg2.AddEntry(h3, h3LegendLabel, "l")
+    if h2: leg2.AddEntry(h2, h2LegendLabel, "l")
     leg2.Draw("same")
     
     c.SaveAs(outputFilename)
@@ -394,9 +389,10 @@ def addSomeHistsLegend(leg, lHists, lHistTags, textSize):
 # == s == Make ALICE Legend       #############################################
 def addALICELegend(blankObj, leg, centLabel, addLabel, textSize):
     if not addLabel=='': leg.AddEntry(blankObj, addLabel, "")
-    leg.AddEntry(blankObj, 'ALICE Pb-Pb #sqrt{#it{s}_{NN}}=5.02 TeV/#it{c}', "")
     if not centLabel=='': leg.AddEntry(blankObj, 'Centrality: '+centLabel+'%', '')
-
+    if addLabel=='ALICE Preliminary': leg.AddEntry(blankObj, 'Pb#font[122]{-}Pb #sqrt{#it{s}_{NN}} = 5.02 TeV', "")
+    else: leg.AddEntry(blankObj, 'ALICE Pb#font[122]{-}Pb #sqrt{#it{s}_{NN}} = 5.02 TeV/#it{c}', "")
+    
     leg.SetFillColorAlpha(0, 9.0)
     leg.SetTextFont(42)
     leg.SetBorderSize(0)
@@ -408,10 +404,15 @@ def addALICELegend(blankObj, leg, centLabel, addLabel, textSize):
 # == e == Make ALICE Legend       #############################################
 
 # == s == Make Jet Legend       #############################################
-def addJetLegend(blankObj, leg, Reso, ptCut, textSize):
-    leg.AddEntry(blankObj, 'Anti-#it{k}_{T}, charged jet', "")
+def addJetLegend(blankObj, leg, JetRLabel, ptCut, textSize):
+    if JetRLabel == 'R01': Reso = 0.1
+    elif JetRLabel == 'R02': Reso = 0.2
+    elif JetRLabel == 'R04': Reso = 0.4
+    else: Reso = 0.2
+
+    leg.AddEntry(blankObj, 'Anti-#it{k}_{T}, Ch. Particle Jet', "")
     leg.AddEntry(blankObj, '#it{R} = '+ str(Reso) + ', |#it{#eta}_{jet}| < '+ str(0.9-Reso), "")
-    leg.AddEntry(blankObj, '#it{p}_{T}^{leading track} > '+ str(ptCut) + ' GeV/#it{c}' , "")
+    leg.AddEntry(blankObj, '#it{p}_{T}^{lead} > '+ str(ptCut) + ' GeV/#it{c}' , "")
 
     leg.SetFillColorAlpha(0, 9.0)
     leg.SetTextFont(42)

@@ -18,9 +18,9 @@ lEPLabel = ['OutOfPlane', 'InPlane', 'Inclusive']
 
 ###################################################################################
 # Main function (0/1/2/3/4, "LHC18q/LHC18r", 0/5/7, "98%: ''/94%: 'TrackEff094'"
-def HAddOutputScaledFiles(LHCPeriod, leadingTrackPtCut,  diffSys):
+def HAddOutputScaledFiles(LHCPeriod, leadingTrackPtCut, diffSys, JetRLabel):
     # outEmbFileDir = './'
-    outEmbFileDir = '~/ALICE/cernbox/SWAN_projects/outputFiles/'+LHCPeriod+'/pass3/Ch/Embedding/'
+    outEmbFileDir = '~/ALICE/cernbox/SWAN_projects/outputFiles/'+LHCPeriod+'/pass3/Ch/Embedding/'+JetRLabel+'/'
     outEmbFile = outEmbFileDir + 'EmbedPtHardScaledResults'\
         +'_TrackPtCut'+str(leadingTrackPtCut)+'_'+diffSys+'.root'
 
@@ -32,8 +32,10 @@ def HAddOutputScaledFiles(LHCPeriod, leadingTrackPtCut,  diffSys):
     for centBin in range(0, numOfCentBin):
         for epBin in range(0, 2):
             listName = lEPLabel[epBin]
+            # inEmbFileDir = '/Volumes/KumaSSD/TrainOutput/'+JetRLabel\
+            #     +'/pass3/Ch/Embedding/'+JetRLabel+'/'
             inEmbFileDir = '~/ALICE/cernbox/SWAN_projects/outputFiles/'\
-                +LHCPeriod+'/pass3/Ch/Embedding/'
+                +LHCPeriod+'/pass3/Ch/Embedding/'+JetRLabel+'/'
             inEmbFileName = inEmbFileDir + 'EmbedPtHardScaledResults'\
                 +'_TrackPtCut'+str(leadingTrackPtCut)+'_'+diffSys+'_CentBin'+str(centBin)+'.root'
             print('Open: '+inEmbFileName)
@@ -84,5 +86,5 @@ def OFileStracture(lMainTree, numOfCentBin):
 
 if __name__ == "__main__":
     args = sys.argv
-    HAddOutputScaledFiles(args[1], int(args[2]),args[3])
+    HAddOutputScaledFiles(args[1], int(args[2]),args[3], args[4])
 

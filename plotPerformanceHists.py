@@ -13,6 +13,32 @@ import PtRangeList
 ################################################################################
 # Plot JER                                                                    ##
 ################################################################################
+def getJESshiftProf(hJESshift2D, ptBinArray, name):
+    nBin = len(ptBinArray)-1
+    # histJER = ROOT.TProfile('temp'+name, 'temp'+name, nBin, ptBinArray)
+    histJER = ROOT.TH1D('temp'+name, 'temp'+name, nBin, ptBinArray)
+    histName = hJESshift2D.GetName() + '_reBin'
+    
+    for iBin in range(1, histJER.GetNbinsX()):
+        histName = "hTempProjJES_pTbin" + str(iBin)
+        lPtVal = ptBinArray[iBin-1]
+        uPtVal = ptBinArray[iBin]
+        hJESshift2D_Rebin = hJESshift2D.Clone(histName)
+        hTempProjJES = hJESshift2D_Rebin.GetXaxis().SetRangeUser(lPtVal, uPtVal)
+        hTempProjJES = hJESshift2D_Rebin.ProjectionY()
+        # JER = hTempProjJES.GetRMS()
+        JER = hTempProjJES.GetStdDev()
+        JERError = hTempProjJES.GetRMSError()
+        # histJER.Fill(lPtVal, JER)
+        histJER.SetBinContent(iBin, JER)
+        histJER.SetBinError(iBin, JERError)
+    
+    return histJER
+
+
+################################################################################
+# Plot JER                                                                    ##
+################################################################################
 def getJER1(hJESshift2D, ptBinArray, name):
     nBin = len(ptBinArray)-1
     # histJER = ROOT.TProfile('temp'+name, 'temp'+name, nBin, ptBinArray)

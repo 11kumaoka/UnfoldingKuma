@@ -16,11 +16,11 @@ import plotPerformanceHists
 ROOT.gROOT.SetBatch(True)
 
 numOfCentBin = 4
-lCentLabel = ['0-5','5-10','10-30','30-50','50-80']
+lCentLabel = ['0#font[122]{-}5','5#font[122]{-}10','10#font[122]{-}30','30#font[122]{-}50','50#font[122]{-}80']
 
 leadingTrackPtCut = 5 # 0, 5, 7 GeV/c
 
-lValKindName = ['lChJetV2', 'lIncChPbPbJetYeild', 'lChJetRAA', 'lOEPChPbPbJetYeild', 'lIEPChPbPbJetYeild']
+lValKindName = ['lChJetV2', 'lIncChPbPbJetYield', 'lChJetRAA', 'lOEPChPbPbJetYield', 'lIEPChPbPbJetYield']
 
 
 # lSysType = ['Nominal','iteKM1', 'iteKP1','DetLvLcut', 'DetLvUcut', 'DiffPrior', 'bkgWay', 'V0Diff']
@@ -39,12 +39,16 @@ uncAbs = 1 # Ratio: 0, Abs: 1
 lPsi2Reso = [0.4513, 0.6388, 0.6632, 0.5032,  0.1579]
 # lPsi2Reso = [0.617, 0.798, 0.809, 0.68, 0.250]
 
+JetRLabel = 'R01'
 
 # inUnfoldedFileDir = './'
-inUnfoldedFileDir = '/Users/tkumaoka/ALICE/cernbox/SWAN_projects/outputFiles/LHC18qr/pass3/Ch/Unfolded/'
+# inUnfoldedFileDir = '/Users/tkumaoka/ALICE/cernbox/SWAN_projects/outputFiles/LHC15o/pass3/Ch/Unfolded/' +JetRLabel+ '/'
+inUnfoldedFileDir = '/Users/tkumaoka/ALICE/cernbox/SWAN_projects/outputFiles/LHC18qr/pass3/Ch/Unfolded/' +JetRLabel+ '/'
+# inUnfoldedFileDir = '/Users/tkumaoka/ALICE/cernbox/SWAN_projects/outputFiles/LHC18qr/pass3/Ch/Unfolded/UFTest/'
 
-# outFinalFileDir = '~/ALICE/cernbox/SWAN_projects/outputFiles/LHC18q/pass3/Ch/FinalPlots/'
-outFinalFileDir = '/Users/tkumaoka/ALICE/cernbox/SWAN_projects/outputFiles/LHC18qr/pass3/Ch/FinalPlots/'
+# outFinalFileDir = '/Users/tkumaoka/ALICE/cernbox/SWAN_projects/outputFiles/LHC15o/pass3/Ch/FinalPlots/'+JetRLabel+ '/'
+outFinalFileDir = '/Users/tkumaoka/ALICE/cernbox/SWAN_projects/outputFiles/LHC18qr/pass3/Ch/FinalPlots/'+JetRLabel+ '/'
+# outFinalFileDir = '/Users/tkumaoka/ALICE/cernbox/SWAN_projects/outputFiles/LHC18qr/pass3/Ch/FinalPlots/UFTest/'
 # outFinalFileDir = './FinalPlots/'
 
 
@@ -77,14 +81,14 @@ lV0DiffSysUncErr = [[0.5850256766345653, 0.4441944711573965, 0.4886183863596415,
 # Main function
 def PlotSysUncertainty():
     inUnfoldedFileName = inUnfoldedFileDir \
-        + 'UnfoldedPtDists'+ '_TrackPtCut'+str(leadingTrackPtCut)+'_.root'
+        + 'UnfoldedPtDists'+ '_TrackPtCut'+str(leadingTrackPtCut)+'_Norm.root'
     inputFile = ROOT.TFile(inUnfoldedFileName, "READ")
     iMainTree = inputFile.Get('mainTree')
     
     oEpTree = iMainTree.FindObject(lEPLabel[0])
     iEpTree = iMainTree.FindObject(lEPLabel[1])
     incTree = iMainTree.FindObject(lEPLabel[2])
-
+    
     inUnfoldedFileNameEff94 = inUnfoldedFileDir \
         + 'UnfoldedPtDists' + '_TrackPtCut'+str(leadingTrackPtCut)+'_TrackEff094.root'
     inputFileEff94 = ROOT.TFile(inUnfoldedFileNameEff94 , "READ")
@@ -93,15 +97,16 @@ def PlotSysUncertainty():
     iEpTreeEff94 = iMainTreeEff94.FindObject(lEPLabel[1])
     incTreeEff94 = iMainTreeEff94.FindObject(lEPLabel[2])
 
-    # === BKG No Fit ========= 
-    inUnfoldedFileNameBKGNoFit = inUnfoldedFileDir \
+    # === BKG No Fit =========
+    inUnfoldedFileNameBKGNoFit = \
+        '/Users/tkumaoka/ALICE/cernbox/SWAN_projects/outputFiles/LHC18qr/pass3/Ch/Unfolded/R02/'\
         + 'UnfoldedPtDists' + '_TrackPtCut'+str(leadingTrackPtCut)+'_BKGNoFit.root'
     inputFileBKGNoFit = ROOT.TFile(inUnfoldedFileNameBKGNoFit, "READ")
     iMainTreeBKGNoFit = inputFileBKGNoFit.Get('mainTree')
     oEpTreeBKGNoFit = iMainTreeBKGNoFit.FindObject(lEPLabel[0])
     iEpTreeBKGNoFit = iMainTreeBKGNoFit.FindObject(lEPLabel[1])
     incTreeBKGNoFit = iMainTreeBKGNoFit.FindObject(lEPLabel[2])
-
+    
     # === BKG V2 Fit ========= 
     inUnfoldedFileNameBKGV2 = inUnfoldedFileDir \
         + 'UnfoldedPtDists' + '_TrackPtCut'+str(leadingTrackPtCut)+'_BKGV2.root'
@@ -129,7 +134,6 @@ def PlotSysUncertainty():
     iEpTreeV0A = iMainTreeV0A.FindObject(lEPLabel[1])
     incTreeV0A = iMainTreeV0A.FindObject(lEPLabel[2])
 
-
     oFileName = outFinalFileDir + 'FinalResultsWithSys.root'
     oFile = ROOT.TFile(oFileName, "RECREATE")
     lOMainTree = ROOT.TList()
@@ -148,7 +152,7 @@ def PlotSysUncertainty():
 
 
     for centBin in range(0, numOfCentBin):
-        
+        # lDTargedObs: [dChJetV2, dJetYield, dJetYield, dJetYieldOEP, dJetYieldIEP]
         lDTargedObs, lRawJetObs = ExtractTargeObservable(\
             oEpTree, iEpTree, incTree, \
             oEpTreeEff94, iEpTreeEff94, incTreeEff94,\
@@ -158,49 +162,69 @@ def PlotSysUncertainty():
             oEpTreeV0A, iEpTreeV0A, incTreeV0A,\
             centBin)
         
-        
-        ptRangeDict, ptBinArrayDict = PtRangeList.eachJetPtBinDef(0, centBin)
+        ptRangeDict, ptBinArrayDict = PtRangeList.eachJetPtBinDef(JetRLabel, 0, centBin)
         pTBinArray = ptBinArrayDict['reported']
-        dhRelaSysUncOEP, dlRelaSysUncErrOEP = GetSysUncErrObj(lMainAllCentObs[3],lDTargedObs[3],\
-            3, pTBinArray, centBin,lOMainTree,oFile)
-        dhRelaSysUncIEP, dlRelaSysUncErrIPE = GetSysUncErrObj(lMainAllCentObs[4],lDTargedObs[4],\
-            4, pTBinArray, centBin,lOMainTree,oFile)
+
+        # dhRelaSysUncOEP, dlRelaSysUncErrOEP = GetSysUncErrObj(lMainAllCentObs[3],lDTargedObs[3],\
+        #     3, pTBinArray, centBin,lOMainTree,oFile)
+        # dhRelaSysUncIEP, dlRelaSysUncErrIPE = GetSysUncErrObj(lMainAllCentObs[4],lDTargedObs[4],\
+        #     4, pTBinArray, centBin,lOMainTree,oFile)
         # print(dlRelaSysUncErrOEP)
-        GetSysUncErrObjV2(lMainAllCentObs[0],lDTargedObs[0],\
-            lDTargedObs[3]['Nominal'], lDTargedObs[4]['Nominal'],\
-            dlRelaSysUncErrOEP, dlRelaSysUncErrIPE, \
-                0, pTBinArray, centBin,lOMainTree,oFile)
+        # GetSysUncErrObjV2(lMainAllCentObs[0],lDTargedObs[0], \
+        #       lDTargedObs[3]['Nominal'], lDTargedObs[4]['Nominal'],\
+        #     dlRelaSysUncErrOEP, dlRelaSysUncErrIPE, 0, pTBinArray, centBin,lOMainTree,oFile)
+        GetSysUncErrObj(lMainAllCentObs[0],lDTargedObs[0], 0, pTBinArray, centBin,lOMainTree,oFile)
 
-        ptRangeDict, ptBinArrayDict = PtRangeList.eachJetPtBinDef(1, centBin)
+        ptRangeDict, ptBinArrayDict = PtRangeList.eachJetPtBinDef(JetRLabel, 1, centBin)
         pTBinArray = ptBinArrayDict['reported']
+        # Inclusive Ch jet Yield
         GetSysUncErrObj(lMainAllCentObs[1],lDTargedObs[1], 1, pTBinArray, centBin,lOMainTree,oFile)
-
+        # RAA
+        GetSysUncErrObj(lMainAllCentObs[2],lDTargedObs[2], 2, pTBinArray, centBin,lOMainTree,oFile)
+        CalcChRAASysErr(lMainAllCentObs[2],lMainAllCentObs[1], centBin)
+        
+        ptRangeDict, ptBinArrayDict = PtRangeList.eachJetPtBinDef(JetRLabel, 0, centBin)
+        pTBinArray = ptBinArrayDict['reported']
+        ### 3. out of plane, 4. In plane
+        GetSysUncErrObj(lMainAllCentObs[3],lDTargedObs[3], 3, pTBinArray, centBin,lOMainTree,oFile)
+        GetSysUncErrObj(lMainAllCentObs[4],lDTargedObs[4], 4, pTBinArray, centBin,lOMainTree,oFile)
+        
+        # CalcChRAATemp(lMainAllCentObs, lOMainTree[2], centBin)
+        
         lOMainTree[0][centBin].Add(lRawJetObs[0])
         lOMainTree[1][centBin].Add(lRawJetObs[1])
-
-    CalcChRAA(lMainAllCentObs, lOMainTree[2])
+        lOMainTree[3][centBin].Add(lRawJetObs[2])
+        lOMainTree[4][centBin].Add(lRawJetObs[3])
+        # lOMainTree[4][centBin].Add(lRawJetObs[4])
+    
     
     PlotAllCentTargetObs(lMainAllCentObs[0], 0) # ChJetV2
     PlotAllCentTargetObs(lMainAllCentObs[2], 2) # ChJetRAA
 
     CompareWithAnotherCentral(lMainAllCentObs[0][0])
     CompareWithAnotherSemiCentral(lMainAllCentObs[0][3])
-
+    
+    PlotJetYieldSemiCent(lMainAllCentObs[4], lMainAllCentObs[3])
+    
+    PlotJetYieldRawUFCompare(lOMainTree)
+    
     oFile.cd()
     lOMainTree.Write('mainTree', 1)
     oFile.Close()
 
+    print('ch jet v2  ===========')
+    print(lMainAllCentObs[0])
+    print('ch jet RAA  ===========')
+    print(lMainAllCentObs[2])
+
     print('root ' + outFinalFileDir)
 
-def ExtractTargeObservable(oEpTree, iEpTree, incTree, \
-    oEpTreeEff94, iEpTreeEff94, incTreeEff94,\
-    oEpTreeBKGNoFit, iEpTreeBKGNoFit, incTreeBKGNoFit, \
-    oEpTreeBKGV2, iEpTreeBKGV2, incTreeBKGV2,\
-    oEpTreeV0C, iEpTreeV0C, incTreeV0C,\
-    oEpTreeV0A, iEpTreeV0A, incTreeV0A,\
-    centBin):
+def ExtractTargeObservable(oEpTree,iEpTree, incTree, oEpTreeEff94, iEpTreeEff94, incTreeEff94,\
+    oEpTreeBKGNoFit,iEpTreeBKGNoFit,incTreeBKGNoFit, oEpTreeBKGV2, iEpTreeBKGV2, incTreeBKGV2,\
+    oEpTreeV0C, iEpTreeV0C, incTreeV0C, oEpTreeV0A, iEpTreeV0A, incTreeV0A, centBin):
     dChJetV2 = {}
     dJetYield = {}
+    dJetRAA = {}
     dJetYieldOEP = {}
     dJetYieldIEP = {}
 
@@ -222,13 +246,13 @@ def ExtractTargeObservable(oEpTree, iEpTree, incTree, \
     iEpRawJetPtYield = iEpCentRawJetTree.FindObject(RawJetName)
     incRawJetPtYield = incCentRawJetTree.FindObject(RawJetName)
     
-    ptRangeDict, ptBinArrayDict = PtRangeList.eachJetPtBinDef(1, centBin)
+    ptRangeDict, ptBinArrayDict = PtRangeList.eachJetPtBinDef(JetRLabel, 1, centBin)
     pTBinArray = ptBinArrayDict['reported']
     nBins = len(pTBinArray) - 1
     incRawJetPtYield = incRawJetPtYield.Rebin(nBins, RawJetName, pTBinArray)
 
     hRawChJetV2 = CalcChJetV2(oEpRawJetPtYield, iEpRawJetPtYield,centBin,'Raw')
-    ptRangeDict, ptBinArrayDict = PtRangeList.eachJetPtBinDef(0, centBin)
+    ptRangeDict, ptBinArrayDict = PtRangeList.eachJetPtBinDef(JetRLabel, 0, centBin)
     pTBinArray = ptBinArrayDict['reported']
     nBins = len(pTBinArray) - 1
     RawJetV2Name = 'hRawChargedJetV2Cent'+str(centBin)
@@ -241,20 +265,20 @@ def ExtractTargeObservable(oEpTree, iEpTree, incTree, \
         iEpUFJetPtYield = iEpCentUFJetTree.FindObject(UFJetName)
         incUFJetPtYield = incCentUFJetTree.FindObject(UFJetName)
         if not oEpUFJetPtYield: print("ERROR no "+UFJetName+" found")
-        histName = 'hOEpncPbPbJetYield'+'_'+ unfoldType +'_'+ lSysType[sysTypeBin]
+        histName = 'hOEpIncPbPbJetYield'+'_'+ unfoldType +'_'+ lSysType[sysTypeBin]
         hOEpUFJetPtYield= oEpUFJetPtYield.Clone(histName)
         dJetYieldOEP[lSysType[sysTypeBin]] = hOEpUFJetPtYield
         histName = 'hIEpIncPbPbJetYield'+'_'+ unfoldType +'_'+ lSysType[sysTypeBin]
         hIEpIncPbPbJetYield = iEpUFJetPtYield.Clone(histName)
         dJetYieldIEP[lSysType[sysTypeBin]] = hIEpIncPbPbJetYield
         
-        hChJetV2 = CalcChJetV2(oEpUFJetPtYield, iEpUFJetPtYield,centBin, lSysType[sysTypeBin])
+        hChJetV2 = CalcChJetV2(oEpUFJetPtYield, iEpUFJetPtYield, centBin, lSysType[sysTypeBin])
         dChJetV2[lSysType[sysTypeBin]] = hChJetV2
         
         histName = 'hIncPbPbJetYield'+'_'+ unfoldType +'_'+ lSysType[sysTypeBin]
         hIncPbPbJetYield = incUFJetPtYield.Clone(histName)
         dJetYield[lSysType[sysTypeBin]] = hIncPbPbJetYield
-
+        dJetRAA[lSysType[sysTypeBin]] = CalcChRAA(hIncPbPbJetYield, centBin, lSysType[sysTypeBin])
     
     # == s == track Efficiency 94%  ===================================
     treeName = 'lCent' + str(centBin)
@@ -269,7 +293,7 @@ def ExtractTargeObservable(oEpTree, iEpTree, incTree, \
     UFJetName = baseUFJetName +'_'+ unfoldType +'_'+ lSysType[0]
     oEpUFJetPtYieldEff94 = oEpCentUFJetTreeEff94.FindObject(UFJetName)
     iEpUFJetPtYieldEff94 = iEpCentUFJetTreeEff94.FindObject(UFJetName)
-    histName = 'hOEpncPbPbJetYield'+'_'+ unfoldType +'_'+ 'trackEff94'
+    histName = 'hOEpIncPbPbJetYield'+'_'+ unfoldType +'_'+ 'trackEff94'
     hOEpUFJetPtYieldEff94 = oEpUFJetPtYieldEff94.Clone(histName)
     dJetYieldOEP['trackEff94'] = hOEpUFJetPtYieldEff94
     histName = 'hIEpIncPbPbJetYield'+'_'+ unfoldType +'_'+ 'trackEff94'
@@ -283,6 +307,7 @@ def ExtractTargeObservable(oEpTree, iEpTree, incTree, \
     histName = 'hIncPbPbJetYield'+'_'+ unfoldType +'_'+ lSysType[0]
     hIncPbPbJetYieldEff94 = incUFJetPtYieldEff94.Clone(histName)
     dJetYield['trackEff94'] = hIncPbPbJetYieldEff94
+    dJetRAA['trackEff94'] = CalcChRAA(hIncPbPbJetYieldEff94, centBin, 'trackEff94')
     # == e == track Efficiency 94%  ===================================
     
     # == s == BKGNoFit  ===================================
@@ -299,7 +324,7 @@ def ExtractTargeObservable(oEpTree, iEpTree, incTree, \
     oEpUFJetPtYieldBKGNoFit = oEpCentUFJetTreeBKGNoFit.FindObject(UFJetName)
     iEpUFJetPtYieldBKGNoFit = iEpCentUFJetTreeBKGNoFit.FindObject(UFJetName)
     
-    histName = 'hOEpncPbPbJetYield'+'_'+ unfoldType +'_'+ 'BKGNoFit'
+    histName = 'hOEpIncPbPbJetYield'+'_'+ unfoldType +'_'+ 'BKGNoFit'
     hOEpUFJetPtYieldBKGNoFit = oEpUFJetPtYieldBKGNoFit.Clone(histName)
     dJetYieldOEP['BKGNoFit'] = hOEpUFJetPtYieldBKGNoFit
     histName = 'hIEpIncPbPbJetYield'+'_'+ unfoldType +'_'+ 'BKGNoFit'
@@ -309,10 +334,11 @@ def ExtractTargeObservable(oEpTree, iEpTree, incTree, \
     hChJetV2BKGNoFit = CalcChJetV2(oEpUFJetPtYieldBKGNoFit,iEpUFJetPtYieldBKGNoFit,centBin,'BKGNoFit')
     dChJetV2['BKGNoFit'] = hChJetV2BKGNoFit
     
-    incUFJetPtYieldBKGNoFit = incCentUFJetTree.FindObject(UFJetName)
-    histName = 'hIncPbPbJetYield'+'_'+ unfoldType +'_'+ lSysType[0]
+    incUFJetPtYieldBKGNoFit = incCentUFJetTreeBKGNoFit.FindObject(UFJetName)
+    histName = 'hIncPbPbJetYield'+'_'+ unfoldType +'_'+ 'BKGNoFit'
     hIncPbPbJetYieldBKGNoFit = incUFJetPtYieldBKGNoFit.Clone(histName)
     dJetYield['BKGNoFit'] = hIncPbPbJetYieldBKGNoFit
+    dJetRAA['BKGNoFit'] = CalcChRAA(hIncPbPbJetYieldBKGNoFit, centBin, 'BKGNoFit')
     # == e == BKGNoFit  ===================================
     
     # == s == BKGV2Fit  ===================================
@@ -329,21 +355,21 @@ def ExtractTargeObservable(oEpTree, iEpTree, incTree, \
     oEpUFJetPtYieldBKGV2 = oEpCentUFJetTreeBKGV2.FindObject(UFJetName)
     iEpUFJetPtYieldBKGV2 = iEpCentUFJetTreeBKGV2.FindObject(UFJetName)
     
-    histName = 'hOEpncPbPbJetYield'+'_'+ unfoldType +'_'+ 'BKGV2'
+    histName = 'hOEpIncPbPbJetYield'+'_'+ unfoldType +'_'+ 'BKGV2'
     hOEpUFJetPtYieldBKGV2 = oEpUFJetPtYieldBKGV2.Clone(histName)
     dJetYieldOEP['BKGV2'] = hOEpUFJetPtYieldBKGV2
-    histName = 'hIEpIncPbPbJetYield'+'_'+ unfoldType +'_'+ 'trackBKGV2'
+    histName = 'hIEpIncPbPbJetYield'+'_'+ unfoldType +'_'+ 'BKGV2'
     hIEpIncPbPbJetYieldBKGV2 = iEpUFJetPtYieldBKGV2.Clone(histName)
     dJetYieldIEP['BKGV2'] = hIEpIncPbPbJetYieldBKGV2
     
     hChJetV2BKGV2 = CalcChJetV2(oEpUFJetPtYieldBKGV2,iEpUFJetPtYieldBKGV2,centBin,'BKGV2')
     dChJetV2['BKGV2'] = hChJetV2BKGV2
     
-
-    incUFJetPtYieldBKGV2 = incCentUFJetTree.FindObject(UFJetName)
-    histName = 'hIncPbPbJetYield'+'_'+ unfoldType +'_'+ lSysType[0]
+    incUFJetPtYieldBKGV2 = incCentUFJetTreeBKGV2.FindObject(UFJetName)
+    histName = 'hIncPbPbJetYield'+'_'+ unfoldType +'_'+ 'BKGV2'
     hIncPbPbJetYieldBKGV2 = incUFJetPtYieldBKGV2.Clone(histName)
     dJetYield['BKGV2'] = hIncPbPbJetYieldBKGV2
+    dJetRAA['BKGV2'] = CalcChRAA(hIncPbPbJetYieldBKGV2, centBin, 'BKGV2')
     # == e == BKGV2Fit  ===================================
 
     # == s == V0CFit  ===================================
@@ -360,7 +386,7 @@ def ExtractTargeObservable(oEpTree, iEpTree, incTree, \
     oEpUFJetPtYieldV0C = oEpCentUFJetTreeV0C.FindObject(UFJetName)
     iEpUFJetPtYieldV0C = iEpCentUFJetTreeV0C.FindObject(UFJetName)
 
-    histName = 'hOEpncPbPbJetYield'+'_'+ unfoldType +'_'+ 'V0C'
+    histName = 'hOEpIncPbPbJetYield'+'_'+ unfoldType +'_'+ 'V0C'
     hOEpUFJetPtYieldV0C = oEpUFJetPtYieldV0C.Clone(histName)
     dJetYieldOEP['V0C'] = hOEpUFJetPtYieldV0C
     histName = 'hIEpIncPbPbJetYield'+'_'+ unfoldType +'_'+ 'V0C'
@@ -369,11 +395,6 @@ def ExtractTargeObservable(oEpTree, iEpTree, incTree, \
     
     hChJetV2V0C = CalcChJetV2(oEpUFJetPtYieldV0C,iEpUFJetPtYieldV0C,centBin,'V0C')
     dChJetV2['V0C'] = hChJetV2V0C
-
-    incUFJetPtYieldV0C = incCentUFJetTree.FindObject(UFJetName)
-    histName = 'hIncPbPbJetYield'+'_'+ unfoldType +'_'+ lSysType[0]
-    hIncPbPbJetYieldV0C = incUFJetPtYieldV0C.Clone(histName)
-    dJetYield['V0C'] = hIncPbPbJetYieldV0C
     # == e == V0CFit  ===================================
 
     # == s == V0AFit  ===================================
@@ -390,7 +411,7 @@ def ExtractTargeObservable(oEpTree, iEpTree, incTree, \
     oEpUFJetPtYieldV0A = oEpCentUFJetTreeV0A.FindObject(UFJetName)
     iEpUFJetPtYieldV0A = iEpCentUFJetTreeV0A.FindObject(UFJetName)
     
-    histName = 'hOEpncPbPbJetYield'+'_'+ unfoldType +'_'+ 'V0A'
+    histName = 'hOEpIncPbPbJetYield'+'_'+ unfoldType +'_'+ 'V0A'
     hOEpUFJetPtYieldV0A = oEpUFJetPtYieldV0A.Clone(histName)
     dJetYieldOEP['V0A'] = hOEpUFJetPtYieldV0A
     histName = 'hIEpIncPbPbJetYield'+'_'+ unfoldType +'_'+ 'V0A'
@@ -399,82 +420,66 @@ def ExtractTargeObservable(oEpTree, iEpTree, incTree, \
 
     hChJetV2V0A = CalcChJetV2(oEpUFJetPtYieldV0A,iEpUFJetPtYieldV0A,centBin,'V0A')
     dChJetV2['V0A'] = hChJetV2V0A
-
-    incUFJetPtYieldV0A = incCentUFJetTree.FindObject(UFJetName)
-    histName = 'hIncPbPbJetYield'+'_'+ unfoldType +'_'+ lSysType[0]
-    hIncPbPbJetYieldV0A = incUFJetPtYieldV0A.Clone(histName)
-    dJetYield['V0A'] = hIncPbPbJetYieldV0A
     # == e == V0AFit  ===================================
 
-
-    lDTargedObs = [dChJetV2, dJetYield, dJetYield, dJetYieldOEP, dJetYieldIEP]
-    lRawJetObs = [hRawChJetV2, incRawJetPtYield]
+    lDTargedObs = [dChJetV2, dJetYield, dJetRAA, dJetYieldOEP, dJetYieldIEP]
+    lRawJetObs = [hRawChJetV2, incRawJetPtYield, oEpRawJetPtYield, iEpRawJetPtYield]
     
     return lDTargedObs, lRawJetObs
 
 def GetSysUncErrObj(lAllValWithErr, dTargedObs, valKindBin, pTBinArray, centBin, lOMainTree, oFile):
-
     # == s == Calculate systematic uncertainty  ===========================
     valDire = ['ChJetV2', 'ChJetRAA', 'ChJetInc', 'ChJetOEP', 'ChJetIEP']
-
+    
     dhAbsSysUnc = {}
     dlAbsSysUncErr  = {}
     dhRelaSysUnc = {}
     dlRelaSysUncErr = {}
     if uncAbs == 1:
         dhAbsSysUnc['prior'], dlAbsSysUncErr['prior'] = AbsSysUncErrCalc1(dTargedObs['Nominal'],\
-            dTargedObs['DiffPrior'], 'prior', 1, pTBinArray, centBin)
+            dTargedObs['DiffPrior'], valKindBin, 'prior', 1, pTBinArray, centBin)
         dhAbsSysUnc['ptBinRange'], dlAbsSysUncErr['ptBinRange']  = AbsSysUncErrCalc2(dTargedObs['Nominal'], \
-            dTargedObs['DetLvLcut'], dTargedObs['DetLvUcut'], 'ptBinRange', 2, pTBinArray, centBin)
+            dTargedObs['DetLvLcut'], dTargedObs['DetLvUcut'], valKindBin, 'ptBinRange', 2, pTBinArray, centBin)
         dhAbsSysUnc['iteration'], dlAbsSysUncErr['iteration'] = AbsSysUncErrCalc2(dTargedObs['Nominal'], \
-            dTargedObs['iteKM1'], dTargedObs['iteKP1'], 'iteration', 3, pTBinArray,centBin)
+            dTargedObs['iteKM1'], dTargedObs['iteKP1'], valKindBin, 'iteration', 3, pTBinArray,centBin)
 
         dhAbsSysUnc['trackEff'], dlAbsSysUncErr['trackEff'] = AbsSysUncErrCalc1(dTargedObs['Nominal'], \
-            dTargedObs['trackEff94'], 'trackEff', 4, pTBinArray, centBin)
+            dTargedObs['trackEff94'], valKindBin, 'trackEff', 4, pTBinArray, centBin)
         
-        # dhAbsSysUnc['bkgWay'], dlAbsSysUncErr['bkgWay'] \
-        #     = AbsSysUncErrCalc1(dTargedObs['Nominal'], dTargedObs['BKGV2'],\
-        #         'bkgWay', 5, pTBinArray,centBin)
-        # dhAbsSysUnc['bkgWay'], dlAbsSysUncErr['bkgWay'] \
-        #     = AbsSysUncErrCalc1(dTargedObs['Nominal'], dTargedObs['BKGNoFit'],\
-        #         'bkgWay', 5, pTBinArray,centBin)
         dhAbsSysUnc['bkgWay'], dlAbsSysUncErr['bkgWay'] \
-            = AbsSysUncErrCalc2(dTargedObs['Nominal'], dTargedObs['BKGNoFit'], dTargedObs['BKGV2'],\
-                'bkgWay', 5, pTBinArray,centBin)
-
-        print(dTargedObs)
-
-        dhAbsSysUnc['V0Diff'], dlAbsSysUncErr['V0Diff'] \
-            = AbsSysUncErrCalc2(dTargedObs['Nominal'], dTargedObs['V0C'], dTargedObs['V0A'],\
-                'V0Diff', 6, pTBinArray,centBin)
-
-        # $$$$ Temp Raw Uncertain Error $$$$
-        # lBkgSysUncErrEachCent = array('d', lBkgSysUncErr[centBin])
-        # dhAbsSysUnc['bkgWay'], dlAbsSysUncErr['bkgWay'] = AbsSysUncErrCalcTempRaw(dTargedObs['Nominal'], \
-        #     lBkgSysUncErrEachCent, 'bkgWay', 5, pTBinArray, centBin)
-        # lV0DiffSysUncErrEachCent = array('d', lV0DiffSysUncErr[centBin])
-        # dhAbsSysUnc['V0Diff'], dlAbsSysUncErr['V0Diff'] = AbsSysUncErrCalcTempRaw(dTargedObs['Nominal'], \
-        #    lV0DiffSysUncErrEachCent, 'bV0Diff', 6, pTBinArray, centBin)
-
+            = AbsSysUncErrCalc1(dTargedObs['Nominal'], dTargedObs['BKGV2'],\
+                valKindBin, 'bkgWay', 5, pTBinArray,centBin)
+        # dhAbsSysUnc['bkgWay'], dlAbsSysUncErr['bkgWay'] \
+        #     = AbsSysUncErrCalc2(dTargedObs['Nominal'], dTargedObs['BKGNoFit'], dTargedObs['BKGV2'],\
+        #         'bkgWay', 5, pTBinArray,centBin)
         
-        SumUpAllAbsSysErr(lAllValWithErr, dTargedObs['Nominal'], dhAbsSysUnc, dlAbsSysUncErr ,pTBinArray,centBin)
+        
+        if (valKindBin == 0) or (valKindBin == 3) or (valKindBin == 4):
+            print(valKindBin)
+            dhAbsSysUnc['V0Diff'], dlAbsSysUncErr['V0Diff'] \
+                = AbsSysUncErrCalc2(dTargedObs['Nominal'],dTargedObs['V0C'],dTargedObs['V0A'],\
+                    valKindBin, 'V0Diff', 6, pTBinArray,centBin)
+        
+        if valKindBin==2: 
+            pTBinArray = [30, 40, 50, 60, 70, 85, 100]
+            pTBinArray = array('d', pTBinArray)
+        SumUpAllAbsSysErr(lAllValWithErr, dTargedObs['Nominal'], valKindBin, dhAbsSysUnc, dlAbsSysUncErr, pTBinArray, centBin)
         
         hNameSysErr = 'h'+valDire[valKindBin]+'SysErr' + '_Cent' + str(centBin)
         hTargedObsSysUncErr = SetupTGraphErrors(dTargedObs['Nominal'],dlAbsSysUncErr['total'],\
             hNameSysErr, pTBinArray, centBin)
-
+        
     elif uncAbs == 0:
         dhRelaSysUnc['prior'], dlRelaSysUncErr['prior'] = RelativeSysUncErrCalc1(dTargedObs['Nominal'],\
-            dTargedObs['DiffPrior'], 'prior', 1, pTBinArray, centBin)
+            dTargedObs['DiffPrior'], valKindBin, 'prior', 1, pTBinArray, centBin)
         dhRelaSysUnc['ptBinRange'], dlRelaSysUncErr['ptBinRange']  = RelativeSysUncErrCalc2(dTargedObs['Nominal'], \
-            dTargedObs['DetLvLcut'], dTargedObs['DetLvUcut'], 'ptBinRange', 2, pTBinArray, centBin)
+            dTargedObs['DetLvLcut'], dTargedObs['DetLvUcut'], valKindBin, 'ptBinRange', 2, pTBinArray, centBin)
         dhRelaSysUnc['iteration'], dlRelaSysUncErr['iteration'] = RelativeSysUncErrCalc2(dTargedObs['Nominal'], \
-            dTargedObs['iteKM1'], dTargedObs['iteKP1'], 'iteration', 3, pTBinArray,centBin)
+            dTargedObs['iteKM1'], dTargedObs['iteKP1'], valKindBin, 'iteration', 3, pTBinArray,centBin)
 
         dhRelaSysUnc['trackEff'], dlRelaSysUncErr['trackEff'] = RelativeSysUncErrCalc1(dTargedObs['Nominal'], \
-            dTargedObs['trackEff94'], 'trackEff', 4, pTBinArray, centBin)
+            dTargedObs['trackEff94'], valKindBin, 'trackEff', 4, pTBinArray, centBin)
         
-        print('CheeeeeeeeeeeeeeeeecKuma002')
         SumUpAllRelaSysErr(lAllValWithErr, dTargedObs['Nominal'], dhRelaSysUnc, dlRelaSysUncErr ,pTBinArray,centBin)
         
         hNameSysErr = 'h'+valDire[valKindBin]+'SysErr' + '_Cent' + str(centBin)
@@ -502,7 +507,7 @@ def GetSysUncErrObj(lAllValWithErr, dTargedObs, valKindBin, pTBinArray, centBin,
     legSysUncError = ROOT.TLegend(0.6,0.7,0.8,0.88,'systematic error ratio')
     genePlotSets.addALICELegend(hBlankEachCentSysErr, legALICE, lCentLabel[centBin], \
         'Work in progress', 0.03)
-    genePlotSets.addJetLegend(hBlankEachCentSysErr, legJet, 0.2, leadingTrackPtCut, 0.03)        
+    genePlotSets.addJetLegend(hBlankEachCentSysErr,legJet,JetRLabel,leadingTrackPtCut, 0.03)        
     genePlotSets.addSomeHistsLegend(legSysUncError, lhSysUncError, lNameSysUncError, 0.03)
     
     label = valDire[valKindBin]+'/SysUncError'+'_TrackPtCut'+str(leadingTrackPtCut)+'_Cent'+str(centBin)
@@ -513,7 +518,7 @@ def GetSysUncErrObj(lAllValWithErr, dTargedObs, valKindBin, pTBinArray, centBin,
     genePlotSets.overwrightSomePlots(hBlankEachCentSysErr, lhSysUncError, \
         0, legALICE,legJet,legSysUncError, lFillColor, plotStyleList, label, '', outFinalFileDir)
     # == e == plot systematic error #######################################
-
+    
     oFile.cd()
     for key in dTargedObs.values(): lOMainTree[valKindBin][centBin][0].Add(key)
     for key in dhAbsSysUnc.values(): lOMainTree[valKindBin][centBin][1].Add(key)
@@ -523,30 +528,30 @@ def GetSysUncErrObj(lAllValWithErr, dTargedObs, valKindBin, pTBinArray, centBin,
     return dhAbsSysUnc, dlAbsSysUncErr
     # return dhRelaSysUnc, dlRelaSysUncErr 
 
-def AbsSysUncErrCalc1(hNominal, hDiff, diffName, diffNum, pTBinArray ,centBin):
+def AbsSysUncErrCalc1(hNominal, hDiff, valKindBin, diffName, diffNum, pTBinArray ,centBin):
     histName = "hNominalCP_" + diffName + '_Cent'+ str(centBin)
     hNominalCP = hNominal.Clone(histName)
     
-    histname = "hDiff_" + diffName + '_Cent'+ str(centBin)
-    title = histname + ";#it{p}_{T,ch jet} (GeV/#it{c}); Ratio Systematic Uncertainty [%]"
+    histName = "hDiff_" + lValKindName[valKindBin] +'_'+ diffName + '_Cent'+ str(centBin)
+    title = histName + ";#it{p}_{T,ch jet} (GeV/#it{c}); Ratio Systematic Uncertainty [%]"
     
     nBins = len(pTBinArray)-1
-    hSysUncPer = ROOT.TH1D(histname, title, nBins, pTBinArray)
-    
+    hSysUncPer = ROOT.TH1D(histName, title, nBins, pTBinArray)
     lSysUncErr = list()
     for iBin in range(1, hNominalCP.GetNbinsX() + 1):
         nomiVal = hNominalCP.GetBinContent(iBin)
         deltaVal = nomiVal - hDiff.GetBinContent(iBin)
-        SysUnc = np.sqrt((deltaVal/nomiVal)*(deltaVal/nomiVal))
-        # SysUnc = np.sqrt((deltaVal)*(deltaVal))*100
+        # SysUnc = np.sqrt((deltaVal)*(deltaVal))
+        # SysUnc = np.sqrt((deltaVal)*(deltaVal))/nomiVal # correct
+        # print('deltaVal: '+str(deltaVal)+' nominal: '+str(nomiVal))
+        SysUnc = np.sqrt((deltaVal)*(deltaVal)/abs(nomiVal)) # ?????
         fillVal = hNominalCP.GetXaxis().GetBinCenter(iBin)
 
         if (fillVal > pTBinArray[0]) and (fillVal < pTBinArray[-1]):
             hSysUncPer.Fill(fillVal, SysUnc)
-
-            SysUncErr = np.sqrt(deltaVal*deltaVal)
-            lSysUncErr.append(SysUncErr)
-            # lSysUncErr.append(SysUnc)
+            
+            # lSysUncErr.append(SysUnc*nomiVal) 
+            lSysUncErr.append(SysUnc) #???
 
     for iBin in range(1, hSysUncPer.GetNbinsX() + 1): hSysUncPer.SetBinError(iBin, 0.)
     hSysUncPer.GetXaxis().SetTitle("#it{p}_{T, ch jet} [GeV/#it{c}]")
@@ -560,33 +565,34 @@ def AbsSysUncErrCalc1(hNominal, hDiff, diffName, diffNum, pTBinArray ,centBin):
 
     return hSysUncPer, lSysUncErr
 
-def AbsSysUncErrCalc2(hNominal, hDiff1, hDiff2, diffName, diffNum, pTBinArray, centBin):
-    histName = "hNominalCP_" + diffName + '_Cent'+ str(centBin)
+def AbsSysUncErrCalc2(hNominal, hDiff1, hDiff2, valKindBin, diffName, diffNum, pTBinArray, centBin):
+    histName = "hNominalCP_" + lValKindName[valKindBin] + diffName + '_Cent'+ str(centBin)
     hNominalCP = hNominal.Clone(histName)
     
-    histname = "hDiff_" + diffName + '_Cent'+ str(centBin)
-    title = histname + ";#it{p}_{T,ch jet} (GeV/#it{c}) Ratio Systematic Uncertainty [%]"
+    histName = "hDiff_" +lValKindName[valKindBin] +'_'+ diffName + '_Cent'+ str(centBin)
+    title = histName + ";#it{p}_{T,ch jet} (GeV/#it{c}) Ratio Systematic Uncertainty [%]"
     
     nBins = len(pTBinArray)-1
-    hSysUncPer = ROOT.TH1D(histname, title, nBins, pTBinArray)
+    hSysUncPer = ROOT.TH1D(histName, title, nBins, pTBinArray)
     
     lSysUncErr = list()
     for iBin in range(1, hNominalCP.GetNbinsX() + 1):
         nomiVal = hNominalCP.GetBinContent(iBin)
-        deltaVal1 = nomiVal - hDiff1.GetBinContent(iBin)
-        deltaVal2 = nomiVal - hDiff2.GetBinContent(iBin)
-        SysUnc1 = (deltaVal1/nomiVal)*(deltaVal1/nomiVal)
-        SysUnc2 = (deltaVal2/nomiVal)*(deltaVal2/nomiVal)
-        SysUncTot = np.sqrt(SysUnc1 + SysUnc2)
-        # SysUnc = np.sqrt((deltaVal)*(deltaVal))*100
+        # deltaVal1 = nomiVal - hDiff1.GetBinContent(iBin) # corect
+        # deltaVal2 = nomiVal - hDiff2.GetBinContent(iBin) # corect
+        deltaVal1 = nomiVal - abs(hDiff1.GetBinContent(iBin)) # ??????
+        deltaVal2 = nomiVal - abs(hDiff2.GetBinContent(iBin)) # ??????
+        
+        SysUnc1 = (deltaVal1)*(deltaVal1)
+        SysUnc2 = (deltaVal2)*(deltaVal2)
+        # SysUncTot = np.sqrt(SysUnc1 + SysUnc2) / np.sqrt(nomiVal*nomiVal) # correct
+        SysUncTot = np.sqrt(SysUnc1 + SysUnc2) / np.sqrt(abs(nomiVal)) # ???
         fillVal = hNominalCP.GetXaxis().GetBinCenter(iBin)
 
         if (fillVal > pTBinArray[0]) and (fillVal < pTBinArray[-1]):
             hSysUncPer.Fill(fillVal, SysUncTot)
-
-            SysUncErr = np.sqrt(deltaVal1*deltaVal1+deltaVal2*deltaVal2)
-            lSysUncErr.append(SysUncErr)
-            # lSysUncErr.append(SysUncTot)
+            # lSysUncErr.append(SysUncTot*nomiVal) # correct
+            lSysUncErr.append(SysUncTot) # ???
 
     for iBin in range(1, hSysUncPer.GetNbinsX() + 1): hSysUncPer.SetBinError(iBin, 0.)
     hSysUncPer.GetXaxis().SetTitle("#it{p}_{T, ch jet} [GeV/#it{c}]")
@@ -600,15 +606,15 @@ def AbsSysUncErrCalc2(hNominal, hDiff1, hDiff2, diffName, diffNum, pTBinArray, c
 
     return hSysUncPer, lSysUncErr
 
-def AbsSysUncErrCalcTempRaw(hNominal, lTemRawSysErr, diffName, diffNum, pTBinArray, centBin):
+def AbsSysUncErrCalcTempRaw(hNominal, lTemRawSysErr, valKindBin, diffName, diffNum, pTBinArray, centBin):
     histName = "hNominalCP_" + diffName + '_Cent'+ str(lBkgSysUncErr)
     hNominalCP = hNominal.Clone(histName)
     
-    histname = "hDiff_" + diffName + '_Cent'+ str(centBin)
-    title = histname + ";#it{p}_{T,ch jet} (GeV/#it{c}); Ratio Systematic Uncertainty [%]"
+    histName = "hDiff_" + diffName + '_Cent'+ str(centBin)
+    title = histName + ";#it{p}_{T,ch jet} (GeV/#it{c}); Ratio Systematic Uncertainty [%]"
     
     nBins = len(pTBinArray)-1
-    hSysUncPer = ROOT.TH1D(histname, title, nBins, pTBinArray)
+    hSysUncPer = ROOT.TH1D(histName, title, nBins, pTBinArray)
     
     lSysUncErr = list()
     print('centBin: '+str(centBin))
@@ -646,16 +652,15 @@ def AbsSysUncErrCalcTempRaw(hNominal, lTemRawSysErr, diffName, diffNum, pTBinArr
 
     return hSysUncPer, lSysUncErr
 
- 
-def RelativeSysUncErrCalc1(hNominal, hDiff, diffName, diffNum, pTBinArray ,centBin):
+def RelativeSysUncErrCalc1(hNominal, hDiff,valKindBin, diffName, diffNum, pTBinArray ,centBin):
     histName = "hNominalRelativeCP_" + diffName + '_Cent'+ str(centBin)
     hNominalCP = hNominal.Clone(histName)
     
-    histname = "hRelativeDiff_" + diffName + '_Cent'+ str(centBin)
-    title = histname + ";#it{p}_{T,ch jet} (GeV/#it{c}); Ratio Systematic Uncertainty [%]"
+    histName = "hRelativeDiff_" + diffName + '_Cent'+ str(centBin)
+    title = histName + ";#it{p}_{T,ch jet} (GeV/#it{c}); Ratio Systematic Uncertainty [%]"
     
     nBins = len(pTBinArray)-1
-    hSysUncPer = ROOT.TH1D(histname, title, nBins, pTBinArray)
+    hSysUncPer = ROOT.TH1D(histName, title, nBins, pTBinArray)
     
     lSysUncErr = list()
     for iBin in range(1, hNominalCP.GetNbinsX() + 1):
@@ -683,15 +688,15 @@ def RelativeSysUncErrCalc1(hNominal, hDiff, diffName, diffNum, pTBinArray ,centB
 
     return hSysUncPer, lSysUncErr
 
-def RelativeSysUncErrCalc2(hNominal, hDiff1, hDiff2, diffName, diffNum, pTBinArray, centBin):
+def RelativeSysUncErrCalc2(hNominal, hDiff1, hDiff2, valKindBin, diffName, diffNum, pTBinArray, centBin):
     histName = "hNominalRelativeCP_" + diffName + '_Cent'+ str(centBin)
     hNominalCP = hNominal.Clone(histName)
     
-    histname = "hRelativeDiff_" + diffName + '_Cent'+ str(centBin)
-    title = histname + ";#it{p}_{T,ch jet} (GeV/#it{c}); Ratio Systematic Uncertainty [%]"
+    histName = "hRelativeDiff_" + diffName + '_Cent'+ str(centBin)
+    title = histName + ";#it{p}_{T,ch jet} (GeV/#it{c}); Ratio Systematic Uncertainty [%]"
     
     nBins = len(pTBinArray)-1
-    hSysUncPer = ROOT.TH1D(histname, title, nBins, pTBinArray)
+    hSysUncPer = ROOT.TH1D(histName, title, nBins, pTBinArray)
     
     lSysUncErr = list()
     for iBin in range(1, hNominalCP.GetNbinsX() + 1):
@@ -727,6 +732,10 @@ def CalcChJetV2(hOEPUFJet, hIEPUFJet, centBin, label):
     hChJetV2Deno = hIEPUFJet + hOEPUFJet
     
     # == s == stat error proper gation Calculation      ========================
+    if(centBin==3):
+        hChJetV2Nume.SaveAs('TemphChJetV2Nume.root')
+        hChJetV2Deno.SaveAs('TemphChJetV2Deno.root')
+    print(label)
     lv2Error = list()
     for iBin in range(1, hChJetV2Nume.GetNbinsX() + 1):
         # numeErr = hChJetV2Nume.GetBinError(iBin)
@@ -772,106 +781,169 @@ def CalcChJetV2(hOEPUFJet, hIEPUFJet, centBin, label):
 
     return hChJetV2Nume
 
-def CalcChRAA(lAllValWithErr, lOMainTree):
-    for centBin in range(0, numOfCentBin):
-        lAllIncPbPbWithErr = lAllValWithErr[1][centBin]
+def CalcChRAA(hIncPbPbJetYield, centBin, label):
+    # for centBin in range(0, numOfCentBin):
+    
+    # HEP https://www.hepdata.net/record/ins1733689  bins: 18
+    # lPPCrossVal = [0.222851, 0.102591, 0.053269, 0.030328, 0.0185155, 0.010319, \
+    #     0.00503213, 0.00279515, 0.00164066, 0.00102357, 0.000529236, 0.000219935, \
+    #         7.91E-05, 2.36E-05, 8.71E-06, 3.75E-06, 1.54E-06, 5.99E-07]
+    # lPPBinArray = [5, 6, 7, 8, 9, 10, 12, 14, 16, 18, 20, 25, 30, 40, 50, 60, 70, 85, 100]
+    # lPPBinCent = [5.5, 6.5, 7.5, 8.5, 9.5, 11, 13, 15, 17, 19, 22.5,\
+    #     27.5, 35, 45, 55, 65, 77.5, 92.5]
+    # lPPBinWidth = [1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 5, 5, 10, 10, 10, 10, 15, 15]
+    # lPPStatErr = [0.000176827, 0.000116457, 8.18E-05, 5.71E-05, 3.82E-05, 2.27E-05,\
+    #     1.69E-05, 1.83E-05, 1.94E-05, 1.96E-05, 1.51E-05, 8.77E-06, 4.18E-06, \
+    #         1.58E-06, 7.07E-07, 3.57E-07, 1.66E-07, 7.11E-08]
+    # lPPSysErr = [0.00824549, 0.00379588, 0.00197095, 0.00112214, 0.000685073, \
+    #     0.000381804, 0.000191221, 0.000111806, 6.73E-05, 4.40E-05, 2.49E-05, \
+    #         1.12E-05, 4.75E-06, 1.72E-06, 7.49E-07, 3.71E-07, 1.79E-07, 7.84E-08]
+
+    lPPCrossVal = [7.91E-05, 2.36E-05, 8.71E-06, 3.75E-06, 1.54E-06, 5.99E-07]
+    lPPBinArray = [30, 40, 50, 60, 70, 85, 100]
+    lPPBinCent = [35, 45, 55, 65, 77.5, 92.5]
+    lPPBinWidth = [5, 5, 5, 5, 7.5, 7.5]
+    lPPStatErr = [4.18E-06, 1.58E-06, 7.07E-07, 3.57E-07, 1.66E-07, 7.11E-08]
+    lPPSysErr = [4.75E-06, 1.72E-06, 7.49E-07, 3.71E-07, 1.79E-07, 7.84E-08]
+
+    lPPCrossVal = array('d', lPPCrossVal)
+    lPPBinArray = array('d', lPPBinArray)
+    lPPBinCent = array('d', lPPBinCent)
+    lPPBinWidth = array('d', lPPBinWidth)
+    lPPStatErr = array('d', lPPStatErr) 
+    lPPSysErr = array('d', lPPSysErr)
+    
+    nPPBins = len(lPPCrossVal)
+    histName  = 'hPPJetYield'+'_Cent'+str(centBin)+'_'+label+'_CP'
+    # hPPJetYield = ROOT.TH1D(histName, histName, 13, 20., 150.)
+    hPPJetYield = ROOT.TH1D(histName, histName, 6, lPPBinArray)
+    # hPPJetYield = hPPJetYield.Rebin(6, histName, lPPBinArray)
+    for ptBin in range(0, nPPBins):
+        ptVal = lPPBinArray[ptBin]
+        ppYVal = lPPCrossVal[ptBin]
+        ppStatErr = lPPStatErr[ptBin]
+        binNum = hPPJetYield.FindBin(ptVal)
+        hPPJetYield.Fill(ptVal, ppYVal)
+        hPPJetYield.SetBinError(binNum, ppStatErr)
         
-        # HEP https://www.hepdata.net/record/ins1733689  bins: 18
-        # lPPCrossVal = [0.222851, 0.102591, 0.053269, 0.030328, 0.0185155, 0.010319, \
-        #     0.00503213, 0.00279515, 0.00164066, 0.00102357, 0.000529236, 0.000219935, \
-        #         7.91E-05, 2.36E-05, 8.71E-06, 3.75E-06, 1.54E-06, 5.99E-07]
-        # lPPBinArray = [5, 6, 7, 8, 9, 10, 12, 14, 16, 18, 20, 25, 30, 40, 50, 60, 70, 85, 100]
-        # lPPBinCent = [5.5, 6.5, 7.5, 8.5, 9.5, 11, 13, 15, 17, 19, 22.5,\
-        #     27.5, 35, 45, 55, 65, 77.5, 92.5]
-        # lPPBinWidth = [1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 5, 5, 10, 10, 10, 10, 15, 15]
-        # lPPStatErr = [0.000176827, 0.000116457, 8.18E-05, 5.71E-05, 3.82E-05, 2.27E-05,\
-        #     1.69E-05, 1.83E-05, 1.94E-05, 1.96E-05, 1.51E-05, 8.77E-06, 4.18E-06, \
-        #         1.58E-06, 7.07E-07, 3.57E-07, 1.66E-07, 7.11E-08]
-        # lPPSysErr = [0.00824549, 0.00379588, 0.00197095, 0.00112214, 0.000685073, \
-        #     0.000381804, 0.000191221, 0.000111806, 6.73E-05, 4.40E-05, 2.49E-05, \
-        #         1.12E-05, 4.75E-06, 1.72E-06, 7.49E-07, 3.71E-07, 1.79E-07, 7.84E-08]
+    # histName  = 'hIncPbPbJetYield'+'_Cent'+str(centBin)+'_'+label+'_CP'
+    histName  = 'hChJetRAA'+'_Cent'+str(centBin)+'_'+label
+    hIncPbPbJetYield_CP = hIncPbPbJetYield.Clone(histName)
+    # hIncPbPbJetYield_CP = hIncPbPbJetYield_CP.Rebin(6, histName, lPPBinArray)
+    histTitle = histName +';#it{p}_{T} [GeV/#it{c}]; #it{R}_{AA}^{ ch jet}'
+    hChJetRAA = hIncPbPbJetYield_CP.Rebin(6, histName, lPPBinArray)
+    # hChJetRAA.Scale(1., "width") #??
+    hChJetRAA.SetTitle(histTitle)
+    hChJetRAA.Divide(hPPJetYield)
 
-        lPPCrossVal = [7.91E-05, 2.36E-05, 8.71E-06, 3.75E-06, 1.54E-06, 5.99E-07]
-        lPPBinArray = [30, 40, 50, 60, 70, 85, 100]
-        lPPBinCent = [35, 45, 55, 65, 77.5, 92.5]
-        lPPBinWidth = [5, 5, 5, 5, 7.5, 7.5]
-        lPPStatErr = [4.18E-06, 1.58E-06, 7.07E-07, 3.57E-07, 1.66E-07, 7.11E-08]
-        lPPSysErr = [4.75E-06, 1.72E-06, 7.49E-07, 3.71E-07, 1.79E-07, 7.84E-08]
+    # if centBin==3:
+    #     hPPJetYield.SaveAs('hPPJetYield.root')
+    #     hChJetRAA.SaveAs('hChJetRAA.root')
+    
+    return hChJetRAA
 
-        lPPCrossVal = array('d', lPPCrossVal)
-        lPPBinArray = array('d', lPPBinArray)
-        lPPBinCent = array('d', lPPBinCent)
-        lPPBinWidth = array('d', lPPBinWidth)
-        lPPStatErr = array('d', lPPStatErr) 
-        lPPSysErr = array('d', lPPSysErr)
+def CalcChRAATemp(lAllValWithErr, lOMainTree, centBin):
+    # for centBin in range(0, numOfCentBin):
+    lAllIncPbPbWithErr = lAllValWithErr[1][centBin]
+    
+    # HEP https://www.hepdata.net/record/ins1733689  bins: 18
+    # lPPCrossVal = [0.222851, 0.102591, 0.053269, 0.030328, 0.0185155, 0.010319, \
+    #     0.00503213, 0.00279515, 0.00164066, 0.00102357, 0.000529236, 0.000219935, \
+    #         7.91E-05, 2.36E-05, 8.71E-06, 3.75E-06, 1.54E-06, 5.99E-07]
+    # lPPBinArray = [5, 6, 7, 8, 9, 10, 12, 14, 16, 18, 20, 25, 30, 40, 50, 60, 70, 85, 100]
+    # lPPBinCent = [5.5, 6.5, 7.5, 8.5, 9.5, 11, 13, 15, 17, 19, 22.5,\
+    #     27.5, 35, 45, 55, 65, 77.5, 92.5]
+    # lPPBinWidth = [1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 5, 5, 10, 10, 10, 10, 15, 15]
+    # lPPStatErr = [0.000176827, 0.000116457, 8.18E-05, 5.71E-05, 3.82E-05, 2.27E-05,\
+    #     1.69E-05, 1.83E-05, 1.94E-05, 1.96E-05, 1.51E-05, 8.77E-06, 4.18E-06, \
+    #         1.58E-06, 7.07E-07, 3.57E-07, 1.66E-07, 7.11E-08]
+    # lPPSysErr = [0.00824549, 0.00379588, 0.00197095, 0.00112214, 0.000685073, \
+    #     0.000381804, 0.000191221, 0.000111806, 6.73E-05, 4.40E-05, 2.49E-05, \
+    #         1.12E-05, 4.75E-06, 1.72E-06, 7.49E-07, 3.71E-07, 1.79E-07, 7.84E-08]
 
-        lChJetRAA = list()
-        lChJetRAAStat = list()
-        lChJetRAASys = list()
-        nPPBins = len(lPPCrossVal)
+    lPPCrossVal = [7.91E-05, 2.36E-05, 8.71E-06, 3.75E-06, 1.54E-06, 5.99E-07]
+    lPPBinArray = [30, 40, 50, 60, 70, 85, 100]
+    lPPBinCent = [35, 45, 55, 65, 77.5, 92.5]
+    lPPBinWidth = [5, 5, 5, 5, 7.5, 7.5]
+    lPPStatErr = [4.18E-06, 1.58E-06, 7.07E-07, 3.57E-07, 1.66E-07, 7.11E-08]
+    lPPSysErr = [4.75E-06, 1.72E-06, 7.49E-07, 3.71E-07, 1.79E-07, 7.84E-08]
+
+    lPPCrossVal = array('d', lPPCrossVal)
+    lPPBinArray = array('d', lPPBinArray)
+    lPPBinCent = array('d', lPPBinCent)
+    lPPBinWidth = array('d', lPPBinWidth)
+    lPPStatErr = array('d', lPPStatErr) 
+    lPPSysErr = array('d', lPPSysErr)
+
+    lChJetRAA = list()
+    lChJetRAAStat = list()
+    lChJetRAASys = list()
+    nPPBins = len(lPPCrossVal)
+    
+    nPbPbBins = len(lAllIncPbPbWithErr[0])
+    diffNumOfBins = nPPBins - nPbPbBins
+    
+    lChJetRAABinCent = list()
+    lChJetRAABinWidth = list()
+    lChJetRAABinArray = list()
+    iPbPbBin = 0
+    for iBin in range(0, nPPBins):
+        if iBin < diffNumOfBins: continue
         
-        nPbPbBins = len(lAllIncPbPbWithErr[0])
-        diffNumOfBins = nPPBins - nPbPbBins
+        chJetRAA = lAllIncPbPbWithErr[0][iPbPbBin]/lPPCrossVal[iBin]
         
-        lChJetRAABinCent = list()
-        lChJetRAABinWidth = list()
-        lChJetRAABinArray = list()
-        iPbPbBin = 0
-        for iBin in range(0, nPPBins):
-            if iBin < diffNumOfBins: continue
-            
-            chJetRAA = lAllIncPbPbWithErr[0][iPbPbBin]/lPPCrossVal[iBin]
-            
-            incPbPbYieldStatErrRatio = lAllIncPbPbWithErr[3][iPbPbBin]/lAllIncPbPbWithErr[0][iPbPbBin]
-            incPPYieldStatErrRatio = lPPStatErr[iBin]/lPPCrossVal[iBin]
-            chJetRAAStatErr = np.sqrt(incPbPbYieldStatErrRatio *incPbPbYieldStatErrRatio \
-                + incPPYieldStatErrRatio*incPPYieldStatErrRatio)
-            
-            incPbPbYieldSysErrRatio = lAllIncPbPbWithErr[5][iPbPbBin]/lAllIncPbPbWithErr[0][iPbPbBin]
-            incPPYieldSysErrRatio = lPPSysErr[iBin]/lPPCrossVal[iBin]
-            chJetRAASysErr = np.sqrt(incPbPbYieldSysErrRatio*incPbPbYieldSysErrRatio \
-                + incPPYieldSysErrRatio*incPPYieldSysErrRatio)
-            
-            lChJetRAA.append(chJetRAA)
-            lChJetRAABinCent.append(lPPBinCent[iBin])
-            lChJetRAABinWidth.append(lPPBinWidth[iBin])
-            lChJetRAAStat.append(chJetRAAStatErr)
-            lChJetRAABinArray.append(lPPBinArray[iBin])
-            lChJetRAASys.append(chJetRAASysErr)
-            
-            iPbPbBin += 1
-
-        lChJetRAABinArray.append(lPPBinArray[-1])
-
-        lChJetRAA = array('d',lChJetRAA)
-        lChJetRAABinCent = array('d', lChJetRAABinCent)
-        lChJetRAABinWidth = array('d', lChJetRAABinWidth)
-        lChJetRAAStat = array('d',lChJetRAAStat)
-        lChJetRAABinArray = array('d', lChJetRAABinArray)
-        lChJetRAASys = array('d',lChJetRAASys)
-
-        lAllValWithErr[2][centBin].append(lChJetRAA)
-        lAllValWithErr[2][centBin].append(lChJetRAABinCent)
-        lAllValWithErr[2][centBin].append(lChJetRAABinWidth)
-        lAllValWithErr[2][centBin].append(lChJetRAAStat)
-        lAllValWithErr[2][centBin].append(lChJetRAABinArray)
-        lAllValWithErr[2][centBin].append(lChJetRAASys)
+        incPbPbYieldStatErrRatio = lAllIncPbPbWithErr[3][iPbPbBin]/lAllIncPbPbWithErr[0][iPbPbBin]
+        incPPYieldStatErrRatio = lPPStatErr[iBin]/lPPCrossVal[iBin]
+        chJetRAAStatErr = np.sqrt(incPbPbYieldStatErrRatio *incPbPbYieldStatErrRatio \
+            + incPPYieldStatErrRatio*incPPYieldStatErrRatio)
         
-        histName  = 'hChJetRAA'+'_Cent'+str(centBin)
-        hChJetRAA = ROOT.TH1D(histName, histName, nPbPbBins-1, lChJetRAABinArray)
-        hChJetRAA.GetXaxis().SetTitle('#it{p}_{T, ch jet} [GeV/#it{c}]')
-        hChJetRAA.GetYaxis().SetTitle('#it{R}_{AA}^{ ch jet}')
-        for ptBin in range(0, len(lChJetRAA)):
-            hChJetRAA.SetBinContent(ptBin+1, lChJetRAA[ptBin])
-            hChJetRAA.SetBinError(ptBin+1, lChJetRAAStat[ptBin])
-        lOMainTree[centBin][0].Add(hChJetRAA)
+        incPbPbYieldSysErrRatio = lAllIncPbPbWithErr[5][iPbPbBin]/lAllIncPbPbWithErr[0][iPbPbBin]
+        incPPYieldSysErrRatio = lPPSysErr[iBin]/lPPCrossVal[iBin]
+        chJetRAASysErr = np.sqrt(incPbPbYieldSysErrRatio*incPbPbYieldSysErrRatio \
+            + incPPYieldSysErrRatio*incPPYieldSysErrRatio)
+        
+        lChJetRAA.append(chJetRAA)
+        lChJetRAABinCent.append(lPPBinCent[iBin])
+        lChJetRAABinWidth.append(lPPBinWidth[iBin])
+        lChJetRAAStat.append(chJetRAAStatErr)
+        lChJetRAABinArray.append(lPPBinArray[iBin])
+        lChJetRAASys.append(chJetRAASysErr)
+        
+        iPbPbBin += 1
+        
+    lChJetRAABinArray.append(lPPBinArray[-1])
+    
+    lChJetRAA = array('d',lChJetRAA)
+    lChJetRAABinCent = array('d', lChJetRAABinCent)
+    lChJetRAABinWidth = array('d', lChJetRAABinWidth)
+    lChJetRAAStat = array('d',lChJetRAAStat)
+    lChJetRAABinArray = array('d', lChJetRAABinArray)
+    lChJetRAASys = array('d',lChJetRAASys)
 
-        hChRAAErr= ROOT.TGraphErrors(nPbPbBins, lChJetRAABinCent, lChJetRAA, \
-            lChJetRAABinWidth, lChJetRAASys)
-        lOMainTree[centBin][2].Add(hChRAAErr)
+    lAllValWithErr[2][centBin].append(lChJetRAA)
+    lAllValWithErr[2][centBin].append(lChJetRAABinCent)
+    lAllValWithErr[2][centBin].append(lChJetRAABinWidth)
+    lAllValWithErr[2][centBin].append(lChJetRAAStat)
+    lAllValWithErr[2][centBin].append(lChJetRAABinArray)
+    lAllValWithErr[2][centBin].append(lChJetRAASys)
+    
+    histName  = 'hChJetRAA'+'_Cent'+str(centBin)
+    hChJetRAA = ROOT.TH1D(histName, histName, nPbPbBins-1, lChJetRAABinArray)
+    hChJetRAA.GetXaxis().SetTitle('#it{p}_{T, ch jet} [GeV/#it{c}]')
+    hChJetRAA.GetYaxis().SetTitle('#it{R}_{AA}^{ ch jet}')
+    for ptBin in range(0, len(lChJetRAA)):
+        hChJetRAA.SetBinContent(ptBin+1, lChJetRAA[ptBin])
+        hChJetRAA.SetBinError(ptBin+1, lChJetRAAStat[ptBin])
+    lOMainTree[centBin][0].Add(hChJetRAA)
+    print('CheeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeecKuma 0001')
+    print(hChJetRAA)
+    
+    hChRAAErr= ROOT.TGraphErrors(nPbPbBins, lChJetRAABinCent, lChJetRAA, \
+        lChJetRAABinWidth, lChJetRAASys)
+    lOMainTree[centBin][2].Add(hChRAAErr)
 
-def SumUpAllAbsSysErr(lAllValWithErr, hNominal, dhAbsSysUnc, dlAbsSysUncErr , pTBinArray, centBin):
-    histName = "hNominalCP_" +'ToTal' + '_Cent'+ str(centBin)
+def SumUpAllAbsSysErr(lAllValWithErr, hNominal, valKindBin, dhAbsSysUnc, dlAbsSysUncErr , pTBinArray, centBin):
+    histName = "hNominalCP_" +lValKindName[valKindBin] + '_ToTal' + '_Cent'+ str(centBin)
     hNominalCP = hNominal.Clone(histName)
 
     lNominalVal = list()
@@ -879,25 +951,26 @@ def SumUpAllAbsSysErr(lAllValWithErr, hNominal, dhAbsSysUnc, dlAbsSysUncErr , pT
     lNominalBinWidth = list()
     lNominalValStat = list()
 
-    lPriorSysUncErr = dlAbsSysUncErr ['prior']
+    lPriorSysUncErr = dlAbsSysUncErr['prior']
     lTotalSysUncErr = list()
-    
+        
     for ptBin in range(0, len(lPriorSysUncErr)):
         totalSysUncErr = 0.
-        for lSysUncErr in dlAbsSysUncErr .values():
+        for lSysUncErr in dlAbsSysUncErr.values():
             # print('EachError'+str(lSysUncErr[ptBin]))
             totalSysUncErr += lSysUncErr[ptBin]*lSysUncErr[ptBin]
         totalSysUncErr = np.sqrt(totalSysUncErr)
         # print('Total Error: ' +str(totalSysUncErr))
         lTotalSysUncErr.append(totalSysUncErr)
+        # lTotalSysUncErr.append(totalSysUncErr)
 
     lTotalSysUncErr = array('d',lTotalSysUncErr)
 
-    histname = "hTotalSysUnc" + '_CentBin' +str(centBin)
-    title = histname + ";#it{p}_{T,ch jet} (GeV/#it{c}) Relative Systematic Uncertainty [%]"
+    histName = "hTotalSysUnc_" +lValKindName[valKindBin] + '_CentBin' +str(centBin)
+    title = histName + ";#it{p}_{T,ch jet} (GeV/#it{c}) Relative Systematic Uncertainty [%]"
     
     nBins = len(pTBinArray)-1
-    hTotSysUncPer = ROOT.TH1D(histname, title, nBins, pTBinArray)
+    hTotSysUncPer = ROOT.TH1D(histName, title, nBins, pTBinArray)
     tempPtBin = 0
     for iBin in range(1, hNominalCP.GetNbinsX() + 1):
         nomiVal = hNominalCP.GetBinContent(iBin)
@@ -905,8 +978,10 @@ def SumUpAllAbsSysErr(lAllValWithErr, hNominal, dhAbsSysUnc, dlAbsSysUncErr , pT
 
         if (fillVal > pTBinArray[0]) and (fillVal < pTBinArray[-1]):
             SysUnc = lTotalSysUncErr[tempPtBin]
-            SysUnc /= np.sqrt(nomiVal*nomiVal)
+            # SysUnc /= np.sqrt(nomiVal*nomiVal)
             hTotSysUncPer.Fill(fillVal, SysUnc)
+            lTotalSysUncErr[tempPtBin] = SysUnc *nomiVal
+            
             tempPtBin += 1
             
             lNominalVal.append(nomiVal)
@@ -939,8 +1014,8 @@ def SumUpAllAbsSysErr(lAllValWithErr, hNominal, dhAbsSysUnc, dlAbsSysUncErr , pT
     lAllValWithErr[centBin].append(pTBinArray)
     lAllValWithErr[centBin].append(lTotalSysUncErr)
 
-    print('Centrality Bin ' + str(centBin))
-    print(dlAbsSysUncErr)
+    # print('Centrality Bin ' + str(centBin))
+    # print(dlAbsSysUncErr)
 
 def SumUpAllRelaSysErr(lAllValWithErr, hNominal, dhRelaSysUnc, dlRelaSysUncErr , pTBinArray, centBin):
     histName = "hNominalRelativeCP_" +'ToTal' + '_Cent'+ str(centBin)
@@ -960,15 +1035,16 @@ def SumUpAllRelaSysErr(lAllValWithErr, hNominal, dhRelaSysUnc, dlRelaSysUncErr ,
             # print('EachError'+str(lSysUncErr[ptBin]))
             totalSysUncErr += lSysUncErr[ptBin]
         # print('Total Error: ' +str(totalSysUncErr))
+
         lTotalSysUncErr.append(totalSysUncErr)
 
     lTotalSysUncErr = array('d',lTotalSysUncErr)
 
-    histname = "hTotalSysUnc" + '_CentBin' +str(centBin)
-    title = histname + ";#it{p}_{T,ch jet} (GeV/#it{c}); Ratio Systematic Uncertainty [%]"
+    histName = "hTotalSysUnc" + '_CentBin' +str(centBin)
+    title = histName + ";#it{p}_{T,ch jet} (GeV/#it{c}); Ratio Systematic Uncertainty [%]"
     
     nBins = len(pTBinArray)-1
-    hTotSysUncPer = ROOT.TH1D(histname, title, nBins, pTBinArray)
+    hTotSysUncPer = ROOT.TH1D(histName, title, nBins, pTBinArray)
     tempPtBin = 0
     for iBin in range(1, hNominalCP.GetNbinsX() + 1):
         nomiVal = hNominalCP.GetBinContent(iBin)
@@ -1011,8 +1087,20 @@ def SumUpAllRelaSysErr(lAllValWithErr, hNominal, dhRelaSysUnc, dlRelaSysUncErr ,
     lAllValWithErr[centBin].append(pTBinArray)
     lAllValWithErr[centBin].append(lTotalSysUncErr)
 
-    print('Centrality Bin ' + str(centBin))
-    print(dlRelaSysUncErr)
+    # print('Centrality Bin ' + str(centBin))
+    # print(dlRelaSysUncErr)
+
+def CalcChRAASysErr(lChJetRAA, lIncChJetYield, centBin):
+    lPPCrossVal = [7.91E-05, 2.36E-05, 8.71E-06, 3.75E-06, 1.54E-06, 5.99E-07]
+    lPPSysErr = [4.75E-06, 1.72E-06, 7.49E-07, 3.71E-07, 1.79E-07, 7.84E-08]
+    
+    for ptBin in range(0, len(lPPCrossVal)):
+        # print('ppY: '+str(lIncChJetYield[centBin][0][ptBin]))
+        RaaSysErr = (lIncChJetYield[centBin][5][ptBin]*lIncChJetYield[centBin][5][ptBin])\
+            /(lIncChJetYield[centBin][0][ptBin]*lIncChJetYield[centBin][0][ptBin]) \
+            + (lPPSysErr[ptBin]*lPPSysErr[ptBin])/(lPPCrossVal[ptBin]*lPPCrossVal[ptBin])
+        RaaSysErr = np.sqrt(RaaSysErr*lChJetRAA[centBin][0][ptBin]*lChJetRAA[centBin][0][ptBin])
+        lChJetRAA[centBin][5][ptBin] = RaaSysErr
 
 def SetupTGraphErrors(hNominal, lSysErr, errHistName, pTBinArray, centBin):
     histName = 'hNominalCP' + '_Cent'+ str(centBin)
@@ -1105,7 +1193,7 @@ def PlotFinalFigure1(hFinalVal, color, label):
     myPad.SetLeftMargin(0.21)
     myPad.SetTopMargin(0.04)
     myPad.SetRightMargin(0.04)
-    myPad.SetBottomMargin(0.15)
+    myPad.SetBottomMargin(0.05)
     myPad.Draw()
     myPad.cd()
 
@@ -1145,7 +1233,7 @@ def PlotFinalFigure2(hFinalVal, hSysErr, color, label):
     myPad.SetLeftMargin(0.21)
     myPad.SetTopMargin(0.04)
     myPad.SetRightMargin(0.04)
-    myPad.SetBottomMargin(0.15)
+    myPad.SetBottomMargin(0.05)
     myPad.Draw()
     myPad.cd()
 
@@ -1164,14 +1252,14 @@ def PlotAllCentTargetObs(lAllValWithErr, valKindBin):
     lhTargetObsAllCent = list()
     lhTargetObsSysErrAllCent = list()
     for centBin in range(0, numOfCentBin):
-        ptRangeDict, ptBinArrayDict = PtRangeList.eachJetPtBinDef(valKindBin, centBin)
+        ptRangeDict, ptBinArrayDict = PtRangeList.eachJetPtBinDef(JetRLabel, valKindBin, centBin)
         pTBinArray = ptBinArrayDict['reported']
         
-        print(lAllValWithErr[centBin])
-        print('lAllValWithErr[centBin][4]')
-        print(lAllValWithErr[centBin][4])
-        print('lAllValWithErr[centBin][0]')
-        print(lAllValWithErr[centBin][0])
+        # print(lAllValWithErr[centBin])
+        # print('lAllValWithErr[centBin][4]')
+        # print(lAllValWithErr[centBin][4])
+        # print('lAllValWithErr[centBin][0]')
+        # print(lAllValWithErr[centBin][0])
             
         nBins = len(lAllValWithErr[centBin][4])
         histName = ''
@@ -1183,6 +1271,7 @@ def PlotAllCentTargetObs(lAllValWithErr, valKindBin):
         if valKindBin==0: yTitle = '#it{v}_{2}^{ ch jet}'
         elif valKindBin==2: yTitle = '#it{R}_{AA}^{ ch jet}'
         hTargetObs.GetYaxis().SetTitle(yTitle)
+            
         for ptBin in range(0, nBins-1):
             hTargetObs.SetBinContent(ptBin+1, lAllValWithErr[centBin][0][ptBin])
             hTargetObs.SetBinError(ptBin+1, lAllValWithErr[centBin][3][ptBin])
@@ -1201,8 +1290,8 @@ def PlotAllCentTargetObs(lAllValWithErr, valKindBin):
         hTargetObsSysErr.SetFillColor(color)
         lhTargetObsSysErrAllCent.append(hTargetObsSysErr)
     
-    nBin = 120
-    lRange = [[30, 150],[-0.01, 0.2]]
+    nBin = 160
+    lRange = [[20, 180],[-0.01, 0.2]]
     if valKindBin==1:
         lRange[1][0] = -0.1
         lRange[1][1] = 1.2
@@ -1232,7 +1321,6 @@ def PlotAllCentTargetObs(lAllValWithErr, valKindBin):
         lhTargetObsAllCent, lhTargetObsSysErrAllCent,\
             legALICE,legJet,legTargetObsAllCent, colorList, styleList, \
                 label, 'EP X0', outFinalFileDir)
-
 
 def CompareWithAnotherCentral(lAllCentChJetV2Val):
     # == s == prepare this measurement (5.02 TeV ALICE Pb-Pb)  =================
@@ -1390,7 +1478,7 @@ def CompareWithAnotherSemiCentral(lAllCentChJetV2Val):
 
     color = 600+2
     sysErr3TeV = ROOT.TGraphErrors(7, ptBin3TeV, ChJetV23TeV, binWidth3TeV, shapeSysErr3TeV)
-    genePlotSets.setHistLooksWSysE(hChJetV23TeV, sysErr3TeV, 20, color, 0)
+    genePlotSets.setHistLooksWSysE(hChJetV23TeV, sysErr3TeV, 71, color, 0)
     # == e == prepare paper figure (2.7 TeV ALICE Pb-Pb)  =================
 
     # == s == prepare paper figure (5.02 TeV ATLAS Pb-Pb)  =================
@@ -1429,7 +1517,7 @@ def CompareWithAnotherSemiCentral(lAllCentChJetV2Val):
     R2v2Caitie.SetLineWidth(2)
     R2v2Caitie.SetMarkerColor(color)
     R2v2Caitie.SetMarkerSize(0.8)
-    R2v2Caitie.SetMarkerStyle(20)
+    R2v2Caitie.SetMarkerStyle(21)
     tempErrList = [0,0,0,0,0,0]
     tempErrList = [0,0,0,0,0,0]
     tempErrWidth = [5,10,10,20,20,20]
@@ -1438,16 +1526,18 @@ def CompareWithAnotherSemiCentral(lAllCentChJetV2Val):
         tempErrList, tempErrList, tempErrList)
 
     lhChJetV2Compare = list()
+    lhChJetV2Compare.append(R2v2Caitie)
     lhChJetV2Compare.append(hChJetV23TeV)
     lhChJetV2Compare.append(hChJetV2ATLAS5TeV)
-    lhChJetV2Compare.append(R2v2Caitie)
     lhChJetV2Compare.append(hChJetV5TeV)
+    
     lhChJetV2SysErrCompare = list()
+    lhChJetV2SysErrCompare.append(sysErrCaitie)
     lhChJetV2SysErrCompare.append(sysErr3TeV)
     lhChJetV2SysErrCompare.append(sysErrATLAS5TeV)
-    lhChJetV2SysErrCompare.append(sysErrCaitie)
     lhChJetV2SysErrCompare.append(sysErr5TeV)
-
+    
+    
     # nBin = 120
     # lRange = [[30, 150],[-0.01, 0.2]]
     nBin = 350
@@ -1457,15 +1547,20 @@ def CompareWithAnotherSemiCentral(lAllCentChJetV2Val):
     legALICE = ROOT.TLegend(0.15,0.8,0.25,0.9,'')
     legJet = ROOT.TLegend(0.15,0.65,0.25,0.75,'')
     legChJetV2Compare = ROOT.TLegend(0.6,0.7,0.8,0.88,'')
-
-    genePlotSets.addALICELegend(hBlankChJetV2Compare, legALICE, lCentLabel[3], 'Work in progress', 0.03)
+    
+    
+    # genePlotSets.addALICELegend(hBlankChJetV2Compare, legALICE, lCentLabel[3], 'ALICE Preliminary', 0.03)
+    genePlotSets.addALICELegend(hBlankChJetV2Compare, legALICE, '', 'ALICE Preliminary', 0.03)
     genePlotSets.addJetLegend(hBlankChJetV2Compare, legJet, 0.2, leadingTrackPtCut, 0.03)
-    lHistLabel = ['#sqrt{#it{s}_{NN}} = 2.76 TeV (ALICE Run1)', '#sqrt{#it{s}_{NN}} = 5.02 TeV (ATLAS Centrality 20-40%)', 'Caitie Estimation ', '#sqrt{#it{s}_{NN}} = 5.02 TeV (This Measurement)']
+    # lHistLabel = ['#sqrt{#it{s}_{NN}} = 2.76 TeV (ALICE Run1)', '#sqrt{#it{s}_{NN}} = 5.02 TeV (ATLAS Centrality 20-40%)', 'Caitie Estimation ''#sqrt{#it{s}_{NN}} = 5.02 TeV']
+    lHistLabel = ['Caitie Estimation ', 'ALICE: #sqrt{#it{s}_{NN}} = 2.76 TeV, Centrality 30#font[122]{-}50%', \
+        'ATLAS: #sqrt{#it{s}_{NN}} = 5.02 TeV, Centrality 20#font[122]{-}40%',  \
+            'ALICE: #sqrt{#it{s}_{NN}} = 5.02 TeV, Centrality 30#font[122]{-}50%']
     genePlotSets.addSomeHistsLegend(legChJetV2Compare, lhChJetV2Compare, lHistLabel, 0.03)
     label = 'ChJetV2SemiCentralCompare'+ '_TrackPtCut'+str(leadingTrackPtCut)
 
-    colorList = [600+2, 632+2, 900+10, 416+2]
-    styleList = [20, 20, 20, 20]
+    colorList = [900+10, 600+2, 632+2,  416+2]
+    styleList = [ 71,71, 21, 20]
 
     genePlotSets.overwrightSomePlotsWithErr(hBlankChJetV2Compare, \
         lhChJetV2Compare, lhChJetV2SysErrCompare,\
@@ -1490,11 +1585,11 @@ def V2StatErrorPropergate(hOEPUFJet, hIEPUFJet):
         lv2Error.append(multErr)
 
 def V2SysErrorPropergate(hV2, hOEPUFJet, hIEPUFJet, lRelaSysUncErrOEP, lRelaSysUncErrIEP, centBin, pTBinArray, diffNum, diffName):
-    histname = "hDiff_" + diffName + '_Cent'+ str(centBin)
-    title = histname + ";#it{p}_{T,ch jet} (GeV/#it{c}); Ratio Systematic Uncertainty [%]"
+    histName = "hDiff_" + diffName + '_Cent'+ str(centBin)
+    title = histName + ";#it{p}_{T,ch jet} (GeV/#it{c}); Ratio Systematic Uncertainty [%]"
     
     nBins = len(pTBinArray)-1
-    hSysUncPer = ROOT.TH1D(histname, title, nBins, pTBinArray)
+    hSysUncPer = ROOT.TH1D(histName, title, nBins, pTBinArray)
     
     lSysUncErr  = list()
     errBin = 0
@@ -1540,9 +1635,8 @@ def V2SysErrorPropergate(hV2, hOEPUFJet, hIEPUFJet, lRelaSysUncErrOEP, lRelaSysU
     return hSysUncPer, lSysUncErr
 
 
-
 def GetSysUncErrObjV2(lAllValWithErr, dTargedObs, \
-    hJetYeildOEP, hJetYeildIEP, dlRelaSysUncErrOEP, dlRelaSysUncErrIEP,\
+    hJetYieldOEP, hJetYieldIEP, dlRelaSysUncErrOEP, dlRelaSysUncErrIEP,\
         valKindBin, pTBinArray, centBin, lOMainTree, oFile):
 
     # == s == Calculate systematic uncertainty  ===========================
@@ -1554,29 +1648,26 @@ def GetSysUncErrObjV2(lAllValWithErr, dTargedObs, \
     dlRelaSysUncErr = {}
     
     dhRelaSysUnc['prior'], dlRelaSysUncErr['prior'] = V2SysErrorPropergate(\
-        dTargedObs['Nominal'], hJetYeildOEP, hJetYeildIEP, \
+        dTargedObs['Nominal'], hJetYieldOEP, hJetYieldIEP, \
         dlRelaSysUncErrOEP['prior'], dlRelaSysUncErrIEP['prior'], centBin, pTBinArray, 1, 'prior')
 
-    dhRelaSysUnc['ptBinRange'], dlRelaSysUncErr['ptBinRange'] = V2SysErrorPropergate(dTargedObs['Nominal'], hJetYeildOEP, hJetYeildIEP, \
+    dhRelaSysUnc['ptBinRange'], dlRelaSysUncErr['ptBinRange'] = V2SysErrorPropergate(dTargedObs['Nominal'], hJetYieldOEP, hJetYieldIEP, \
         dlRelaSysUncErrOEP['ptBinRange'], dlRelaSysUncErrIEP['ptBinRange'], centBin, pTBinArray, 2, 'ptBinRange')
 
-    dhRelaSysUnc['iteration'], dlRelaSysUncErr['iteration'] = V2SysErrorPropergate(dTargedObs['Nominal'], hJetYeildOEP, hJetYeildIEP, \
+    dhRelaSysUnc['iteration'], dlRelaSysUncErr['iteration'] = V2SysErrorPropergate(dTargedObs['Nominal'], hJetYieldOEP, hJetYieldIEP, \
         dlRelaSysUncErrOEP['iteration'], dlRelaSysUncErrIEP['iteration'], centBin, pTBinArray, 3, 'iteration')
 
-    dhRelaSysUnc['trackEff'], dlRelaSysUncErr['trackEff'] = V2SysErrorPropergate(dTargedObs['Nominal'], hJetYeildOEP, hJetYeildIEP, \
+    dhRelaSysUnc['trackEff'], dlRelaSysUncErr['trackEff'] = V2SysErrorPropergate(dTargedObs['Nominal'], hJetYieldOEP, hJetYieldIEP, \
         dlRelaSysUncErrOEP['trackEff'], dlRelaSysUncErrIEP['trackEff'], centBin, pTBinArray, 4,'trackEff')
 
-    dhRelaSysUnc['bkgWay'], dlRelaSysUncErr['bkgWay'] = V2SysErrorPropergate(dTargedObs['Nominal'], hJetYeildOEP, hJetYeildIEP, \
+    dhRelaSysUnc['bkgWay'], dlRelaSysUncErr['bkgWay'] = V2SysErrorPropergate(dTargedObs['Nominal'], hJetYieldOEP, hJetYieldIEP, \
         dlRelaSysUncErrOEP['bkgWay'], dlRelaSysUncErrIEP['bkgWay'], centBin, pTBinArray, 5, 'bkgWay')
 
-    dhRelaSysUnc['V0Diff'], dlRelaSysUncErr['V0Diff'] = V2SysErrorPropergate(dTargedObs['Nominal'], hJetYeildOEP, hJetYeildIEP, \
+    dhRelaSysUnc['V0Diff'], dlRelaSysUncErr['V0Diff'] = V2SysErrorPropergate(dTargedObs['Nominal'], hJetYieldOEP, hJetYieldIEP, \
         dlRelaSysUncErrOEP['V0Diff'], dlRelaSysUncErrIEP['V0Diff'], centBin, pTBinArray, 6,'V0Diff')
     
     SumUpAllRelaSysErr(lAllValWithErr, dTargedObs['Nominal'], dhRelaSysUnc, \
         dlRelaSysUncErr ,pTBinArray,centBin)
-
-    print('CheeeeeeeeeeeeeeeeecKumaV2')
-    print(dlRelaSysUncErr)
     
     hNameSysErr = 'h'+valDire[valKindBin]+'SysErr' + '_Cent' + str(centBin)
     hTargedObsSysUncErr = SetupTGraphErrors(dTargedObs['Nominal'], dlRelaSysUncErr ['total'],\
@@ -1585,8 +1676,6 @@ def GetSysUncErrObjV2(lAllValWithErr, dTargedObs, \
     # == s == Calculate systematic uncertainty  ===========================
 
     # == s == plot systematic error #######################################
-    print('CheeeeeeeeeeeeeeeeecKuma111')
-    print(dhRelaSysUnc)
     lhSysUncError = list()
     for key in dhRelaSysUnc.values(): lhSysUncError.append(key)
     lhSysUncError.reverse()
@@ -1601,7 +1690,7 @@ def GetSysUncErrObjV2(lAllValWithErr, dTargedObs, \
     legJet = ROOT.TLegend(0.15,0.65,0.25,0.75,'')
     legSysUncError = ROOT.TLegend(0.6,0.7,0.8,0.88,'systematic error ratio')
     genePlotSets.addALICELegend(hBlankEachCentSysErr, legALICE, lCentLabel[centBin], \
-        'Work in progress', 0.03)
+        'ALICE Preliminary', 0.03)
     genePlotSets.addJetLegend(hBlankEachCentSysErr, legJet, 0.2, leadingTrackPtCut, 0.03)        
     genePlotSets.addSomeHistsLegend(legSysUncError, lhSysUncError, lNameSysUncError, 0.03)
     
@@ -1622,6 +1711,316 @@ def GetSysUncErrObjV2(lAllValWithErr, dTargedObs, \
     
     return dhRelaSysUnc, dlRelaSysUncErr 
 
+def PlotJetYieldSemiCent(lAllCentChJetYIEPVal, lAllCentChJetYOEPVal):
+    for centBin in range(0, numOfCentBin):
+        ptBinArrayYIEP= lAllCentChJetYIEPVal[centBin][4]
+        nBins = len(ptBinArrayYIEP) - 1
+
+        histName = 'hChJetYIEP' +'_Cent'+str(centBin)
+        hChJetYIEP = ROOT.TH1D(histName, histName, nBins, ptBinArrayYIEP)
+        histName = 'hChJetYOEP' +'_Cent'+str(centBin)
+        hChJetYOEP = ROOT.TH1D(histName, histName, nBins, ptBinArrayYIEP)
+        
+        for ptBin in range(0, nBins):
+            hChJetYIEP.Fill(ptBinArrayYIEP[ptBin]+0.01, lAllCentChJetYIEPVal[centBin][0][ptBin])
+            hChJetYOEP.Fill(ptBinArrayYIEP[ptBin]+0.01, lAllCentChJetYOEPVal[centBin][0][ptBin])
+            hChJetYIEP.SetBinError(ptBin+1, lAllCentChJetYIEPVal[centBin][3][ptBin])
+            hChJetYOEP.SetBinError(ptBin+1, lAllCentChJetYOEPVal[centBin][3][ptBin])
+
+        sysErrYIEP = ROOT.TGraphErrors(nBins, lAllCentChJetYIEPVal[centBin][1], \
+            lAllCentChJetYIEPVal[centBin][0], lAllCentChJetYIEPVal[centBin][2], \
+                lAllCentChJetYIEPVal[centBin][5])
+        sysErrYOEP = ROOT.TGraphErrors(nBins, lAllCentChJetYOEPVal[centBin][1], \
+            lAllCentChJetYOEPVal[centBin][0], lAllCentChJetYOEPVal[centBin][2], \
+                lAllCentChJetYOEPVal[centBin][5])
+        color = 416+2
+        genePlotSets.setHistLooksWSysE(hChJetYIEP, sysErrYIEP, 20, 860+7, 0)
+        genePlotSets.setHistLooksWSysE(hChJetYOEP, sysErrYOEP, 21, 800+7, 0)
+
+        lhChJetYCompare = list()
+        lhChJetYCompare.append(hChJetYIEP)
+        lhChJetYCompare.append(hChJetYOEP)
+        lhChJetYSysErrCompare = list()
+        lhChJetYSysErrCompare.append(sysErrYIEP)
+        lhChJetYSysErrCompare.append(sysErrYOEP)
+
+        # nBin = 120
+        # lRange = [[30, 150],[-0.01, 0.2]]
+        nBin = 350
+        lRange = [[30, 150],[0.00000001, 0.0001]]
+        lTitle = ['hBlanckForChJetYOPCompareCent'+str(centBin),'#it{p}_{T, ch jet} [GeV/#it{c}]','#frac{1}{<#it{T}_{AA}>}#frac{1}{#it{N}_{event}}#frac{d#it{N}}{d#it{p}_{T}} [mb/(GeV/#it{c})]']
+        hBlankChJetYCompare = genePlotSets.makeBlank1DHist(nBin, lRange, lTitle)
+        legALICE = ROOT.TLegend(0.15,0.8,0.25,0.9,'')
+        legJet = ROOT.TLegend(0.15,0.65,0.25,0.75,'')
+        legChJetYCompare = ROOT.TLegend(0.6,0.7,0.8,0.88,'')
+
+        genePlotSets.addALICELegend(hBlankChJetYCompare, legALICE, lCentLabel[3], 'ALICE Working Progress', 0.03)
+        genePlotSets.addJetLegend(hBlankChJetYCompare, legJet, 0.2, leadingTrackPtCut, 0.03)
+        lHistLabel = ['In-plane', 'Out-of-plane']
+        genePlotSets.addSomeHistsLegend(legChJetYCompare, lhChJetYCompare, lHistLabel, 0.03)
+        label = 'ChJetYCompare'+ '_TrackPtCut'+str(leadingTrackPtCut) + '_Cent' +str(centBin)
+
+        colorList = [860+7, 800+7]
+        styleList = [20, 21]
+
+        genePlotSets.overwrightSomePlotsWithErr(hBlankChJetYCompare, \
+            lhChJetYCompare, lhChJetYSysErrCompare,\
+                legALICE,legJet,legChJetYCompare, colorList, styleList, \
+                    label, 'EP X0', outFinalFileDir)
+
+        ## === s === Out/In Ratio Plot #################################
+        histName = 'hChJetOIYRatio' + 'Cent_' + str(centBin)
+        hChJetOIYRatio = ROOT.TH1D(histName, histName, nBins, ptBinArrayYIEP)
+        lChJetOIYRatioVal = list()
+        lChJetOIYRatioSysErr = list()
+        for ptBin in range(0, nBins):
+            yValOEP = lAllCentChJetYOEPVal[centBin][0][ptBin]
+            yValIEP = lAllCentChJetYIEPVal[centBin][0][ptBin]
+            fillVal = yValOEP/ yValIEP
+            hChJetOIYRatio.Fill(ptBinArrayYIEP[ptBin]+0.01, fillVal)
+            lChJetOIYRatioVal.append(fillVal)
+            # == stat err ==
+            statErrorOEP = lAllCentChJetYOEPVal[centBin][3][ptBin]
+            statErrorIEP = lAllCentChJetYOEPVal[centBin][3][ptBin]
+            statError = np.sqrt((statErrorOEP/yValOEP)*(statErrorOEP/yValOEP) \
+                + (statErrorIEP/yValIEP)*(statErrorIEP/yValIEP))*fillVal
+            hChJetOIYRatio.SetBinError(ptBin+1, statError)
+            # == sys err ==
+            sysErrorOEP = lAllCentChJetYOEPVal[centBin][5][ptBin]
+            sysErrorIEP = lAllCentChJetYOEPVal[centBin][5][ptBin]
+            sysError = np.sqrt((sysErrorOEP/yValOEP)*(sysErrorOEP/yValOEP) \
+                + (sysErrorIEP/yValIEP)*(sysErrorIEP/yValIEP))*fillVal
+            lChJetOIYRatioSysErr.append(sysError)
+        
+        lChJetOIYRatioVal = array('d',lChJetOIYRatioVal)
+        lChJetOIYRatioSysErr = array('d',lChJetOIYRatioSysErr)
+
+        sysErrOIYRatio = ROOT.TGraphErrors(nBins, lChJetOIYRatioVal, \
+            lAllCentChJetYIEPVal[centBin][0], lAllCentChJetYIEPVal[centBin][2], lChJetOIYRatioSysErr)
+        
+        genePlotSets.setHistLooksWSysE(hChJetOIYRatio, sysErrOIYRatio, 20, 860+7, 0)
+
+        lhChJetOIYRatio = list()
+        lhChJetOIYRatio.append(hChJetOIYRatio)
+        lhChJetOIYRatioSysErr = list()
+        lhChJetOIYRatioSysErr.append(sysErrOIYRatio)
+        
+        # print(lChJetOIYRatioVal)
+        # print(lChJetOIYRatioSysErr)
+
+        # nBin = 120
+        # lRange = [[30, 150],[-0.01, 0.2]]
+        nBin = 350
+        lRange = [[20, 150],[0.3, 1.2]]
+        lTitle = ['hBlanckForChJetOIYRatioCent'+str(centBin),'#it{p}_{T, ch jet} [GeV/#it{c}]','#frac{1}{<#it{T}_{AA}>}#frac{1}{#it{N}_{event}}#frac{d#it{N}}{d#it{p}_{T}} [mb/(GeV/#it{c})]']
+        hBlankChJetOIYRatio = genePlotSets.makeBlank1DHist(nBin, lRange, lTitle)
+        legALICE = ROOT.TLegend(0.15,0.8,0.25,0.9,'')
+        legJet = ROOT.TLegend(0.15,0.65,0.25,0.75,'')
+        legChJetOIYRatio = ROOT.TLegend(0.6,0.7,0.8,0.88,'')
+
+        genePlotSets.addALICELegend(hBlankChJetYCompare, legALICE, lCentLabel[centBin], 'ALICE Working Progress', 0.03)
+        genePlotSets.addJetLegend(hBlankChJetYCompare, legJet, 0.2, leadingTrackPtCut, 0.03)
+        lHistLabel = ['OIYRatio']
+        genePlotSets.addSomeHistsLegend(legChJetOIYRatio, lhChJetOIYRatio, lHistLabel, 0.03)
+        label = 'ChJetOIYRatio'+ '_TrackPtCut'+str(leadingTrackPtCut) + '_Cent'+str(centBin)
+
+        colorList = [860+7, 800+7]
+        styleList = [20, 21]
+        
+        outCanvFileDir = outFinalFileDir + '/canvChJetYield/'
+        genePlotSets.overwrightSomePlotsWithErr(hBlankChJetOIYRatio, \
+            lhChJetOIYRatio, lhChJetOIYRatioSysErr,\
+                legALICE,legJet,legChJetOIYRatio, colorList, styleList, \
+                    label, 'EP X0', outCanvFileDir)
+        ## === e === Out/In Ratio Plot #################################
+
+def PlotJetYieldRawUFCompare(lOMainTree):
+    for centBin in range(0, numOfCentBin):    
+        ptRangeDict, ptBinArrayDict = PtRangeList.eachJetPtBinDef(JetRLabel, 0, centBin)
+        pTBinArray = ptBinArrayDict['reported']
+        nBins = len(pTBinArray) - 1
+        
+        rawJetId = -1
+        hTempRawJetOEP = lOMainTree[3][centBin][rawJetId] # Raw Jet OutOfPlane
+        hTempRawJetIEP = lOMainTree[4][centBin][rawJetId] # Raw Jet InPlane
+        histName = 'hRawJetOEPForRawUFComp_CP'+str(centBin)
+        hTempRawJetOEP_CP = hTempRawJetOEP.Clone(histName)
+        hTempRawJetOEP_CP = hTempRawJetOEP_CP.Rebin(nBins, histName, pTBinArray)
+        hTempRawJetOEP_CP.SetLineColor(602)
+        hTempRawJetOEP_CP.SetLineWidth(2)
+        hTempRawJetOEP_CP.SetMarkerColor(602)
+        hTempRawJetOEP_CP.SetMarkerSize(1.2)
+        hTempRawJetOEP_CP.SetMarkerStyle(71)
+        histName = 'hRawJetIEPForRawUFComp_CP'+str(centBin)
+        hTempRawJetIEP_CP = hTempRawJetIEP.Clone(histName)
+        hTempRawJetIEP_CP = hTempRawJetIEP_CP.Rebin(nBins, histName, pTBinArray)
+        hTempRawJetIEP_CP.SetLineColor(634)
+        hTempRawJetIEP_CP.SetLineWidth(2)
+        hTempRawJetIEP_CP.SetMarkerColor(634)
+        hTempRawJetIEP_CP.SetMarkerSize(1.2)
+        hTempRawJetIEP_CP.SetMarkerStyle(72)
+
+        ufJetId = 0
+        hTempUFJetOEP = lOMainTree[3][centBin][0][ufJetId] # Unfolded Nominal Jet OutOfPlane
+        hTempUFJetIEP = lOMainTree[4][centBin][0][ufJetId] # Unfolded Nominal Jet InPlane
+        histName = 'hUFJetOEPForRawUFComp_CP'+str(centBin)
+        hTempUFJetOEP_CP = hTempUFJetOEP.Clone(histName)
+        hTempUFJetOEP_CP = hTempUFJetOEP_CP.Rebin(nBins, histName, pTBinArray)
+        hTempUFJetOEP_CP.SetLineColor(867)
+        hTempUFJetOEP_CP.SetLineWidth(2)
+        hTempUFJetOEP_CP.SetMarkerColor(867)
+        hTempUFJetOEP_CP.SetMarkerSize(1.2)
+        hTempUFJetOEP_CP.SetMarkerStyle(20)
+        histName = 'hUFJetIEPForRawUFComp_CP'+str(centBin)
+        hTempUFJetIEP_CP = hTempUFJetIEP.Clone(histName)
+        hTempUFJetIEP_CP = hTempUFJetIEP_CP.Rebin(nBins, histName, pTBinArray)
+        hTempUFJetIEP_CP.SetLineColor(807)
+        hTempUFJetIEP_CP.SetLineWidth(2)
+        hTempUFJetIEP_CP.SetMarkerColor(807)
+        hTempUFJetIEP_CP.SetMarkerSize(1.2)
+        hTempUFJetIEP_CP.SetMarkerStyle(21)
+
+        yAxisTitle = 'Jet Yield'
+        ratioYAxisTitle = '#frac{Raw Jet Yield}{Unfolded Jet Yield}'
+        legendTitle = ''
+        scalingOptions = ''
+        hLegendLabel = 'Raw Jet'
+        h2LegendLabel = 'Unfolded Jet'
+        h3LegendLabel = ''
+        xRangeMin = 20.
+        xRangeMax = 150.
+        outputFilename = outFinalFileDir + '/YieldPlots/RawUFJetYieldOEPCompCent'+str(centBin)+'.root'
+        genePlotSets.plotSpectra(hTempUFJetOEP_CP, hTempRawJetOEP_CP, '', 0., \
+            xRangeMin, xRangeMax, yAxisTitle, ratioYAxisTitle, \
+            outputFilename, scalingOptions, legendTitle,\
+                hLegendLabel, h2LegendLabel, h3LegendLabel, yRatioMax = 2.2)
+
+        outputFilename = outFinalFileDir + '/YieldPlots/RawUFJetYieldIEPCompCent'+str(centBin)+'.root'
+        genePlotSets.plotSpectra(hTempUFJetIEP_CP, hTempRawJetIEP_CP, '', 0., \
+            xRangeMin, xRangeMax, yAxisTitle, ratioYAxisTitle, \
+            outputFilename, scalingOptions, legendTitle,\
+                hLegendLabel, h2LegendLabel, h3LegendLabel, yRatioMax = 2.2)
+
+        # = s =    Plot spectra and ratio of h (and h3, if supplied) to h2           ###
+        
+        c = ROOT.TCanvas("c","c: pT",800,850)
+        c.cd()
+        pad1 = ROOT.TPad("pad1", "pad1", 0, 0.55, 1, 1.0)
+        pad1.SetBottomMargin(0)
+        pad1.SetLeftMargin(0.15)
+        pad1.SetRightMargin(0.05)
+        pad1.SetTopMargin(0.05)
+        pad1.SetLogy()
+        pad1.Draw()
+        pad1.cd()
+        
+        hTempUFJetIEP_CP.GetYaxis().SetTitle(yAxisTitle)
+        hTempUFJetIEP_CP.GetYaxis().SetTitleSize(0.06)
+        hTempUFJetIEP_CP.GetYaxis().SetRangeUser(2e-10,2e-3)
+        hTempUFJetIEP_CP.GetYaxis().SetLabelFont(43)
+        hTempUFJetIEP_CP.GetYaxis().SetLabelSize(20)
+        xAxisTitle = hTempUFJetIEP_CP.GetXaxis().GetTitle()
+        hTempUFJetIEP_CP.GetXaxis().SetTitle("")
+
+        hTempUFJetIEP_CP.Draw("hist PE")
+        hTempRawJetIEP_CP.Draw("hist same PE")
+        hTempUFJetOEP_CP.Draw("hist same PE")
+        hTempRawJetOEP_CP.Draw("hist same PE")
+
+        leg1 = ROOT.TLegend(0.7,0.7,0.93,0.93,legendTitle)
+        leg1.SetFillColor(10)
+        leg1.SetBorderSize(0)
+        leg1.SetFillStyle(0)
+        leg1.SetTextSize(0.05)
+        leg1.AddEntry(hTempRawJetOEP_CP, 'Raw jet Out-of-plane', "l")
+        leg1.AddEntry(hTempUFJetOEP_CP, 'Unfolded jet Out-of-plane', "l")
+        leg1.AddEntry(hTempRawJetIEP_CP, 'Raw jet In-plane', "l")
+        leg1.AddEntry(hTempUFJetIEP_CP, 'Unfolded jet In-plane', "l")
+        leg1.Draw("same")
+
+        c.cd()
+        pad2 = ROOT.TPad("pad2", "pad2", 0, 0.3, 1, 0.55)
+        pad2.SetTopMargin(0)
+        pad2.SetBottomMargin(0.)
+        pad2.SetLeftMargin(0.15)
+        pad2.SetRightMargin(0.05)
+        # pad2.SetLogy()
+        pad2.Draw()
+        pad2.cd()
+
+        # plot ratio h/h2 
+        hRatioName = 'hRatioUFRawOEPCent'+str(centBin)
+        hRatioOEP = hTempUFJetOEP_CP.Clone(hRatioName)
+        hRatioOEP.Divide(hTempRawJetOEP_CP)
+        hRatioName = 'hRatioUFRawIEPCent'+str(centBin)
+        hRatioIEP = hTempUFJetIEP_CP.Clone(hRatioName)
+        hRatioIEP.Divide(hTempRawJetIEP_CP)
+
+        hRatioOEP.GetYaxis().SetTitle(ratioYAxisTitle)
+        hRatioOEP.GetYaxis().SetTitleSize(15)
+        hRatioOEP.GetYaxis().SetTitleFont(43)
+        hRatioOEP.GetYaxis().SetTitleOffset(2.2)
+        hRatioOEP.GetYaxis().SetLabelFont(43)
+        hRatioOEP.GetYaxis().SetLabelSize(20)
+        hRatioOEP.GetYaxis().SetNdivisions(505)
+
+        #automatic zoom-in for a very small scatter of the points
+        hRatioOEP.GetYaxis().SetRangeUser(0.2,2.5)
+
+        hRatioOEP.Draw("P E")
+        hRatioIEP.Draw("same P E")
+
+        line = ROOT.TLine(xRangeMin,1,xRangeMax,1)
+        line.SetLineColor(920+2)
+        line.SetLineStyle(2)
+        line.Draw()
+        
+        leg2 = ROOT.TLegend(0.7,0.1,0.93,0.3,legendTitle)
+        leg2.SetFillColor(10)
+        leg2.SetBorderSize(0)
+        leg2.SetFillStyle(0)
+        leg2.SetTextSize(0.1)
+        leg2.AddEntry(hRatioOEP, 'Out-of-plane', "l")
+        leg2.AddEntry(hRatioIEP, 'In-plane', "l")
+        leg2.Draw("same")
+
+        c.cd()
+        pad3 = ROOT.TPad("pad3", "pad3", 0, 0.05, 1, 0.3)
+        pad3.SetTopMargin(0)
+        pad3.SetBottomMargin(0.35)
+        pad3.SetLeftMargin(0.15)
+        pad3.SetRightMargin(0.05)
+        pad3.Draw()
+        pad3.cd()
+
+        hIODoubleRatioName = 'hIODoubleRatioCent'+str(centBin)
+        hIODoubleRatio = hRatioIEP.Clone(hIODoubleRatioName)
+        hIODoubleRatio.Divide(hRatioOEP)
+        hIODoubleRatio.GetYaxis().SetRangeUser(0.8,1.5)
+        hIODoubleRatio.Draw("P E")
+
+        hIODoubleRatio.GetXaxis().SetTitleSize(25)
+        hIODoubleRatio.GetXaxis().SetTitleFont(43)
+        hIODoubleRatio.GetXaxis().SetTitleOffset(4.)
+        hIODoubleRatio.GetXaxis().SetLabelFont(43)
+        hIODoubleRatio.GetXaxis().SetLabelSize(20)
+        hIODoubleRatio.GetXaxis().SetTitle('#it{p}_{T}^{ ch jet} [GeV/#it{c}]')
+        
+        yTitle = '#frac{UF/Raw ratio at In-Plane}{UF/Raw ratio at Out-Of-Plane}'
+        hIODoubleRatio.GetYaxis().SetTitle(yTitle)
+        hIODoubleRatio.GetYaxis().SetTitleSize(15)
+        hIODoubleRatio.GetYaxis().SetTitleFont(43)
+        hIODoubleRatio.GetYaxis().SetTitleOffset(2.2)
+        hIODoubleRatio.GetYaxis().SetLabelFont(43)
+        hIODoubleRatio.GetYaxis().SetLabelSize(20)
+        hIODoubleRatio.GetYaxis().SetNdivisions(505)
+
+        pad1.cd()
+        
+        outputFilename = outFinalFileDir + '/YieldPlots/RawUFJetYieldIOEPCompCent'+str(centBin)+'.root'
+        c.SaveAs(outputFilename)
+        c.Close()
+        # = e =    Plot spectra and ratio of h (and h3, if supplied) to h2           ###
 
 
 ################################################################################
